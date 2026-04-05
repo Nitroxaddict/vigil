@@ -148,7 +148,7 @@ var _ = Describe("notifications", func() {
 			color := notifications.ColorInt
 			username := "containrrrbot"
 			iconURL := "https://containrrr.dev/watchtower-sq180.png"
-			expected := fmt.Sprintf("discord://%s@%s?color=0x%x&colordebug=0x0&colorerror=0x0&colorinfo=0x0&colorwarn=0x0&username=watchtower", token, channel, color)
+			expected := fmt.Sprintf("discord://%s@%s?color=0x%x&colordebug=0x0&colorerror=0x0&colorinfo=0x0&colorwarn=0x0&username=vigil", token, channel, color)
 			buildArgs := func(url string) []string {
 				return []string{
 					"--notifications",
