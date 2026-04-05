@@ -3,6 +3,7 @@ package digest_test
 import (
 	"fmt"
 	"github.com/containrrr/watchtower/internal/actions/mocks"
+	"github.com/containrrr/watchtower/internal/meta"
 	"github.com/containrrr/watchtower/pkg/registry/digest"
 	wtTypes "github.com/containrrr/watchtower/pkg/types"
 	. "github.com/onsi/ginkgo/v2"
@@ -107,7 +108,7 @@ var _ = Describe("Digests", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyHeader(http.Header{
-						"User-Agent": []string{"Watchtower/v0.0.0-unknown"},
+						"User-Agent": []string{meta.UserAgent},
 					}),
 					ghttp.RespondWith(http.StatusOK, "", http.Header{
 						digest.ContentDigestHeader: []string{
