@@ -40,13 +40,13 @@ var _ = Describe("notifications", func() {
 				Expect(err).NotTo(HaveOccurred())
 				data := notifications.GetTemplateData(command)
 				title := data.Title
-				Expect(title).To(Equal("Watchtower updates on test.host"))
+				Expect(title).To(Equal("Vigil updates on test.host"))
 			})
 		})
 		When("no hostname can be resolved", func() {
 			It("should use the default simple title", func() {
 				title := notifications.GetTitle("", "")
-				Expect(title).To(Equal("Watchtower updates"))
+				Expect(title).To(Equal("Vigil updates"))
 			})
 		})
 		When("title tag is set", func() {
@@ -353,7 +353,7 @@ var _ = Describe("notifications", func() {
 })
 
 func buildExpectedURL(username string, password string, host string, port int, from string, to string, auth string) string {
-	var template = "smtp://%s:%s@%s:%d/?auth=%s&fromaddress=%s&fromname=Watchtower&subject=&toaddresses=%s"
+	var template = "smtp://%s:%s@%s:%d/?auth=%s&fromaddress=%s&fromname=Vigil&subject=&toaddresses=%s"
 	return fmt.Sprintf(template,
 		url.QueryEscape(username),
 		url.QueryEscape(password),

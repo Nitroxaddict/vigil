@@ -108,7 +108,7 @@ var _ = Describe("JSON template", func() {
 			}
 		]
 		},
-		"title": "Watchtower updates on Mock"
+		"title": "Vigil updates on Mock"
 }`
 				data := mockDataFromStates(s.UpdatedState, s.FreshState, s.FailedState, s.SkippedState, s.UpdatedState)
 				Expect(getTemplatedResult(`json.v1`, false, data)).To(MatchJSON(expected))

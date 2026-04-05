@@ -105,7 +105,7 @@ func GetTitle(hostname string, tag string) string {
 		tb.WriteRune(' ')
 	}
 
-	tb.WriteString("Watchtower updates")
+	tb.WriteString("Vigil updates")
 
 	if hostname != "" {
 		tb.WriteString(" on ")

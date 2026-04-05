@@ -218,7 +218,7 @@ updt1 (mock/updt1:latest): Updated
 
 		When("using a template referencing Title", func() {
 			It("should contain the title in the output", func() {
-				expected := `Watchtower updates on Mock`
+				expected := `Vigil updates on Mock`
 				data := mockDataFromStates(s.UpdatedState)
 				Expect(getTemplatedResult(`{{ .Title }}`, false, data)).To(Equal(expected))
 			})

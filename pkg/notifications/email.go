@@ -53,7 +53,7 @@ func newEmailNotifier(c *cobra.Command) t.ConvertibleNotifier {
 func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 	conf := &shoutrrrSmtp.Config{
 		FromAddress: e.From,
-		FromName:    "Watchtower",
+		FromName:    "Vigil",
 		ToAddresses: []string{e.To},
 		Port:        uint16(e.Port),
 		Host:        e.Server,
