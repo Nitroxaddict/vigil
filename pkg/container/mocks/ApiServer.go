@@ -260,12 +260,12 @@ func RemoveImageHandler(imagesWithParents map[string][]string) http.HandlerFunc 
 		ghttp.VerifyRequest("DELETE", O.MatchRegexp("/images/.*")),
 		func(w http.ResponseWriter, r *http.Request) {
 			parts := strings.Split(r.URL.Path, `/`)
-			image := parts[len(parts)-1]
+			imageID := parts[len(parts)-1]
 
-			if parents, found := imagesWithParents[image]; found {
+			if parents, found := imagesWithParents[imageID]; found {
 				items := []image.DeleteResponse{
-					{Untagged: image},
-					{Deleted: image},
+					{Untagged: imageID},
+					{Deleted: imageID},
 				}
 				for _, parent := range parents {
 					items = append(items, image.DeleteResponse{Deleted: parent})
