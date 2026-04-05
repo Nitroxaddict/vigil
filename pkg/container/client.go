@@ -198,8 +198,9 @@ func (client dockerClient) StopContainer(c t.Container, timeout time.Duration) e
 		}
 	}
 
-	// TODO: This should probably be checked.
-	_ = client.waitForStopOrTimeout(c, timeout)
+	if err := client.waitForStopOrTimeout(c, timeout); err != nil {
+		log.Debugf("Error waiting for container %s to stop: %v", shortID, err)
+	}
 
 	if c.ContainerInfo().HostConfig.AutoRemove {
 		log.Debugf("AutoRemove container %s, skipping ContainerRemove call.", shortID)
