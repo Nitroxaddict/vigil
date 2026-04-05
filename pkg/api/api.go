@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"crypto/subtle"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -27,8 +27,8 @@ func New(token string) *API {
 func (api *API) RequireToken(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
-		want := fmt.Sprintf("Bearer %s", api.Token)
-		if auth != want {
+		want := "Bearer " + api.Token
+		if subtle.ConstantTimeCompare([]byte(auth), []byte(want)) != 1 {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -53,7 +53,7 @@ func (api *API) RegisterHandler(path string, handler http.Handler) {
 func (api *API) Start(block bool) error {
 
 	if !api.hasHandlers {
-		log.Debug("Watchtower HTTP API skipped.")
+		log.Debug("Vigil HTTP API skipped.")
 		return nil
 	}
 
