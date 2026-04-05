@@ -22,6 +22,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+      - name: Update Docker SDK
+        run: |
+          go get github.com/docker/docker@v27.5.1+incompatible
+          go get github.com/docker/cli@v27.5.1+incompatible
+          go mod tidy
       - uses: dominikh/staticcheck-action@v1
         with:
           version: "2024.1.1"
