@@ -74,6 +74,8 @@ jobs:
           file: dockerfiles/Dockerfile.release
           push: true
           tags: ${{ steps.version.outputs.tags }}
+          provenance: false
+          sbom: false
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.description=Vigil - automatically update Docker containers
