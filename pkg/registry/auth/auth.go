@@ -68,7 +68,7 @@ func GetChallengeRequest(URL url.URL) (*http.Request, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "*/*")
-	req.Header.Set("User-Agent", "Watchtower (Docker)")
+	req.Header.Set("User-Agent", "Vigil (Docker)")
 	return req, nil
 }
 

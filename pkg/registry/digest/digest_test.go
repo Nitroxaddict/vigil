@@ -107,7 +107,7 @@ var _ = Describe("Digests", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyHeader(http.Header{
-						"User-Agent": []string{"Watchtower/v0.0.0-unknown"},
+						"User-Agent": []string{"Vigil/v0.0.0-unknown"},
 					}),
 					ghttp.RespondWith(http.StatusOK, "", http.Header{
 						digest.ContentDigestHeader: []string{
