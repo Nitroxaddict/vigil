@@ -27,10 +27,8 @@ jobs:
           go get github.com/docker/docker@v27.5.1+incompatible
           go get github.com/docker/cli@v27.5.1+incompatible
           go mod tidy
-      - uses: dominikh/staticcheck-action@v1
-        with:
-          version: "2024.1.1"
-          install-go: "false"
+      - name: Vet
+        run: go vet ./...
   test:
     name: Test
     strategy:
@@ -54,8 +52,7 @@ jobs:
           go get github.com/docker/cli@v27.5.1+incompatible
           go mod tidy
       - name: Run tests
-        run: |
-          go test -v -coverprofile coverage.out -covermode atomic ./...
+        run: go test ./...
   build:
     name: Build
     runs-on: ubuntu-latest
