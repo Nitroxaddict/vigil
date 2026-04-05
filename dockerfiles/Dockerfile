@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     tzdata
 
 FROM scratch
+LABEL "dev.vigil"="true"
 LABEL "com.centurylinklabs.watchtower"="true"
 
 COPY --from=alpine \
