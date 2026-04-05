@@ -1,7 +1,9 @@
 package meta
 
+const Name = "Vigil"
+
 var (
-	// Version is the compile-time set version of Vigil
+	// Version is the compile-time set version
 	Version = "v0.0.0-unknown"
 
 	// UserAgent is the http client identifier derived from Version
@@ -9,5 +11,5 @@ var (
 )
 
 func init() {
-	UserAgent = "Vigil/" + Version
+	UserAgent = Name + "/" + Version
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	shoutrrrSmtp "github.com/containrrr/shoutrrr/pkg/services/smtp"
+	"github.com/containrrr/watchtower/internal/meta"
 	t "github.com/containrrr/watchtower/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -53,7 +54,7 @@ func newEmailNotifier(c *cobra.Command) t.ConvertibleNotifier {
 func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 	conf := &shoutrrrSmtp.Config{
 		FromAddress: e.From,
-		FromName:    "Vigil",
+		FromName:    meta.Name,
 		ToAddresses: []string{e.To},
 		Port:        uint16(e.Port),
 		Host:        e.Server,

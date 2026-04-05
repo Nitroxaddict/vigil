@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/containrrr/watchtower/internal/meta"
 	"github.com/containrrr/watchtower/pkg/registry/helpers"
 	"github.com/containrrr/watchtower/pkg/types"
 	ref "github.com/distribution/reference"
@@ -68,7 +69,7 @@ func GetChallengeRequest(URL url.URL) (*http.Request, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "*/*")
-	req.Header.Set("User-Agent", "Vigil (Docker)")
+	req.Header.Set("User-Agent", meta.Name+" (Docker)")
 	return req, nil
 }
 
