@@ -102,11 +102,7 @@ func (c Container) SafeImageID() wt.ImageID {
 // container. If the original image was specified without a particular tag, the
 // "latest" tag is assumed.
 func (c Container) ImageName() string {
-	// Compatibility w/ Zodiac deployments
-	imageName, ok := c.getLabelValue(zodiacLabel)
-	if !ok {
-		imageName = c.containerInfo.Config.Image
-	}
+	imageName := c.containerInfo.Config.Image
 
 	if !strings.Contains(imageName, ":") {
 		imageName = fmt.Sprintf("%s:latest", imageName)
