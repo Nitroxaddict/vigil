@@ -295,7 +295,7 @@ var _ = Describe("the client", func() {
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("GET", HaveSuffix("exec/ex-exec-id/json")),
 						ghttp.RespondWithJSONEncoded(http.StatusOK, dockercontainer.ExecInspect{
-							ID:          execID,
+							ExecID:      execID,
 							Running:     false,
 							ExitCode:    0,
 							ContainerID: string(containerID),
