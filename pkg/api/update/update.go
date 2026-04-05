@@ -38,7 +38,8 @@ type Handler struct {
 func (handle *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	log.Info("Updates triggered by HTTP API request.")
 
-	_, err := io.Copy(os.Stdout, r.Body)
+	// Limit request body to 1MB to prevent DoS via oversized payloads
+	_, err := io.Copy(os.Stdout, io.LimitReader(r.Body, 1<<20))
 	if err != nil {
 		log.Println(err)
 		return
