@@ -1,0 +1,15 @@
+language: en
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "pkg/**/*.go"
+      instructions: "Focus on Docker SDK compatibility, container lifecycle safety, and backward compatibility with Watchtower labels/env vars."
+    - path: "internal/**/*.go"
+      instructions: "Check for breaking changes to CLI flags and environment variable handling. Vigil must support both VIGIL_* and WATCHTOWER_* env vars."
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+chat:
+  auto_reply: true
