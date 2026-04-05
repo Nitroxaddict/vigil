@@ -1,0 +1,32 @@
+name: Update Dependencies
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Update Docker SDK deps
+        run: |
+          go get github.com/docker/docker@v27.5.1+incompatible
+          go get github.com/docker/cli@v27.5.1+incompatible
+          go mod tidy
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add go.mod go.sum
+          git diff --staged --quiet || git commit -m "Update go.mod/go.sum with Docker SDK v27 deps"
+          git push
