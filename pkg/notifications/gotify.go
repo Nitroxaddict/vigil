@@ -41,7 +41,7 @@ func newGotifyNotifier(c *cobra.Command) t.ConvertibleNotifier {
 func getGotifyToken(flags *pflag.FlagSet) string {
 	gotifyToken, _ := flags.GetString("notification-gotify-token")
 	if len(gotifyToken) < 1 {
-		log.Fatal("Required argument --notification-gotify-token(cli) or WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN(env) is empty.")
+		log.Fatal("Required argument --notification-gotify-token(cli) or VIGIL_NOTIFICATION_GOTIFY_TOKEN/WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN(env) is empty.")
 	}
 	return gotifyToken
 }
@@ -50,7 +50,7 @@ func getGotifyURL(flags *pflag.FlagSet) string {
 	gotifyURL, _ := flags.GetString("notification-gotify-url")
 
 	if len(gotifyURL) < 1 {
-		log.Fatal("Required argument --notification-gotify-url(cli) or WATCHTOWER_NOTIFICATION_GOTIFY_URL(env) is empty.")
+		log.Fatal("Required argument --notification-gotify-url(cli) or VIGIL_NOTIFICATION_GOTIFY_URL/WATCHTOWER_NOTIFICATION_GOTIFY_URL(env) is empty.")
 	} else if !(strings.HasPrefix(gotifyURL, "http://") || strings.HasPrefix(gotifyURL, "https://")) {
 		log.Fatal("Gotify URL must start with \"http://\" or \"https://\"")
 	} else if strings.HasPrefix(gotifyURL, "http://") {

@@ -49,7 +49,7 @@ func runNotifyUpgradeE(cmd *cobra.Command, _ []string) error {
 	logf("")
 
 	sb := strings.Builder{}
-	sb.WriteString("WATCHTOWER_NOTIFICATION_URL=")
+	sb.WriteString("VIGIL_NOTIFICATION_URL=")
 
 	for i, u := range urls {
 		if i != 0 {

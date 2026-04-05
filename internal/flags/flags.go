@@ -391,28 +391,50 @@ Should only be used for testing.`)
 		"Write notification logs to stdout instead of logging (to stderr)")
 }
 
-func envString(key string) string {
+// vigilEnvKey returns the VIGIL_ equivalent of a WATCHTOWER_ env var key.
+// For non-WATCHTOWER keys, returns empty string.
+func vigilEnvKey(key string) string {
+	if strings.HasPrefix(key, "WATCHTOWER_") {
+		return "VIGIL_" + strings.TrimPrefix(key, "WATCHTOWER_")
+	}
+	return ""
+}
+
+// bindEnvWithFallback binds both VIGIL_ and WATCHTOWER_ env vars for a key.
+// VIGIL_ takes precedence when both are set.
+func bindEnvWithFallback(key string) {
+	if vigilKey := vigilEnvKey(key); vigilKey != "" {
+		// Check if VIGIL_ variant is set; if so, use it
+		if val := os.Getenv(vigilKey); val != "" {
+			viper.Set(key, val)
+			return
+		}
+	}
 	viper.MustBindEnv(key)
+}
+
+func envString(key string) string {
+	bindEnvWithFallback(key)
 	return viper.GetString(key)
 }
 
 func envStringSlice(key string) []string {
-	viper.MustBindEnv(key)
+	bindEnvWithFallback(key)
 	return viper.GetStringSlice(key)
 }
 
 func envInt(key string) int {
-	viper.MustBindEnv(key)
+	bindEnvWithFallback(key)
 	return viper.GetInt(key)
 }
 
 func envBool(key string) bool {
-	viper.MustBindEnv(key)
+	bindEnvWithFallback(key)
 	return viper.GetBool(key)
 }
 
 func envDuration(key string) time.Duration {
-	viper.MustBindEnv(key)
+	bindEnvWithFallback(key)
 	return viper.GetDuration(key)
 }
 
@@ -427,7 +449,7 @@ func SetDefaults() {
 	viper.SetDefault("WATCHTOWER_NOTIFICATIONS_LEVEL", "info")
 	viper.SetDefault("WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT", 25)
 	viper.SetDefault("WATCHTOWER_NOTIFICATION_EMAIL_SUBJECTTAG", "")
-	viper.SetDefault("WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER", "watchtower")
+	viper.SetDefault("WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER", "vigil")
 	viper.SetDefault("WATCHTOWER_LOG_LEVEL", "info")
 	viper.SetDefault("WATCHTOWER_LOG_FORMAT", "auto")
 }

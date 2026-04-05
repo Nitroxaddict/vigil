@@ -50,11 +50,11 @@ var rootCmd = NewRootCommand()
 // NewRootCommand creates the root command for watchtower
 func NewRootCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "watchtower",
+		Use:   "vigil",
 		Short: "Automatically updates running Docker containers",
 		Long: `
-	Watchtower automatically updates running Docker containers whenever a new image is released.
-	More information available at https://github.com/containrrr/watchtower/.
+	Vigil automatically updates running Docker containers whenever a new image is released.
+	A community-maintained fork of Watchtower. https://github.com/Nitroxaddict/vigil
 	`,
 		Run:    Run,
 		PreRun: PreRun,
@@ -119,7 +119,7 @@ func PreRun(cmd *cobra.Command, _ []string) {
 	warnOnHeadPullFailed, _ := f.GetString("warn-on-head-failure")
 
 	if monitorOnly && noPull {
-		log.Warn("Using `WATCHTOWER_NO_PULL` and `WATCHTOWER_MONITOR_ONLY` simultaneously might lead to no action being taken at all. If this is intentional, you may safely ignore this message.")
+		log.Warn("Using NO_PULL and MONITOR_ONLY simultaneously might lead to no action being taken at all. If this is intentional, you may safely ignore this message.")
 	}
 
 	client = container.NewClient(container.ClientOptions{
@@ -148,7 +148,7 @@ func Run(c *cobra.Command, names []string) {
 		// health check should not have pid 1
 		if os.Getpid() == 1 {
 			time.Sleep(1 * time.Second)
-			log.Fatal("The health check flag should never be passed to the main watchtower container process")
+			log.Fatal("The health check flag should never be passed to the main vigil container process")
 		}
 		os.Exit(0)
 	}
@@ -273,7 +273,7 @@ func writeStartupMessage(c *cobra.Command, sched time.Time, filtering string) {
 		notifier.StartNotification()
 	}
 
-	startupLog.Info("Watchtower ", meta.Version)
+	startupLog.Info("Vigil ", meta.Version)
 
 	notifierNames := notifier.GetNames()
 	if len(notifierNames) > 0 {
