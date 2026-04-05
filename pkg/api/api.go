@@ -71,6 +71,11 @@ func (api *API) Start(block bool) error {
 	return nil
 }
 
+// runHTTPServer starts the HTTP API server on port 8080.
+// WARNING: This server does not use TLS. If exposed externally,
+// place it behind a reverse proxy with TLS termination to protect
+// the API token from network sniffing.
 func runHTTPServer() {
+	log.Info("Vigil HTTP API listening on :8080 (no TLS — use a reverse proxy for external access)")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
