@@ -55,6 +55,11 @@ func (client MockClient) StartContainer(_ t.Container) (t.ContainerID, error) {
 	return "", nil
 }
 
+// StartContainerWithImage is a mock method
+func (client MockClient) StartContainerWithImage(c t.Container, _ string) (t.ContainerID, error) {
+	return client.StartContainer(c)
+}
+
 // RenameContainer is a mock method
 func (client MockClient) RenameContainer(_ t.Container, _ string) error {
 	return nil

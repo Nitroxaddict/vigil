@@ -29,6 +29,7 @@ type Client interface {
 	GetContainer(containerID t.ContainerID) (t.Container, error)
 	StopContainer(t.Container, time.Duration) error
 	StartContainer(t.Container) (t.ContainerID, error)
+	StartContainerWithImage(t.Container, string) (t.ContainerID, error)
 	RenameContainer(t.Container, string) error
 	IsContainerStale(t.Container, t.UpdateParams) (stale bool, latestImage t.ImageID, err error)
 	ExecuteCommand(containerID t.ContainerID, command string, timeout int) (SkipUpdate bool, err error)
@@ -249,11 +250,23 @@ func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingCo
 }
 
 func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) {
+	return client.startContainer(c, "")
+}
+
+func (client dockerClient) StartContainerWithImage(c t.Container, imageID string) (t.ContainerID, error) {
+	return client.startContainer(c, imageID)
+}
+
+func (client dockerClient) startContainer(c t.Container, imageOverride string) (t.ContainerID, error) {
 	bg := context.Background()
 	config := c.GetCreateConfig()
 	hostConfig := c.GetCreateHostConfig()
 	networkConfig := client.GetNetworkConfig(c)
 	sanitizeContainerConfig(config, client.api.ClientVersion())
+
+	if imageOverride != "" {
+		config.Image = imageOverride
+	}
 
 	// simpleNetworkConfig is a networkConfig with only 1 network.
 	// see: https://github.com/docker/docker/issues/29265
@@ -276,19 +289,29 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 		return "", err
 	}
 
+	// cleanup removes the created container if a subsequent step fails,
+	// freeing the name for a rollback attempt.
+	cleanup := func(err error) (t.ContainerID, error) {
+		log.Debugf("Removing partially created container %s due to error: %s", name, err)
+		if rmErr := client.api.ContainerRemove(bg, createdContainer.ID, container.RemoveOptions{Force: true}); rmErr != nil {
+			log.Errorf("Failed to remove partial container %s: %s", name, rmErr)
+		}
+		return "", err
+	}
+
 	if !(hostConfig.NetworkMode.IsHost()) {
 
 		for k := range simpleNetworkConfig.EndpointsConfig {
 			err = client.api.NetworkDisconnect(bg, k, createdContainer.ID, true)
 			if err != nil {
-				return "", err
+				return cleanup(err)
 			}
 		}
 
 		for k, v := range networkConfig.EndpointsConfig {
 			err = client.api.NetworkConnect(bg, k, createdContainer.ID, v)
 			if err != nil {
-				return "", err
+				return cleanup(err)
 			}
 		}
 
@@ -299,7 +322,10 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 		return createdContainerID, nil
 	}
 
-	return createdContainerID, client.doStartContainer(bg, c, createdContainer)
+	if err := client.doStartContainer(bg, c, createdContainer); err != nil {
+		return cleanup(err)
+	}
+	return createdContainerID, nil
 
 }
 
