@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	sdkClient "github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/containrrr/watchtower/pkg/registry"
 	"github.com/containrrr/watchtower/pkg/registry/digest"
@@ -229,10 +229,9 @@ func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingCo
 		EndpointsConfig: c.ContainerInfo().NetworkSettings.Networks,
 	}
 
-	for _, ep := range config.EndpointsConfig {
-		// Clear per-network MacAddress (requires API 1.44, not supported on all daemons)
-		ep.MacAddress = ""
+	sanitizeNetworkConfig(config, client.api.ClientVersion())
 
+	for _, ep := range config.EndpointsConfig {
 		aliases := make([]string, 0, len(ep.Aliases))
 		cidAlias := c.ID().ShortID()
 
@@ -254,6 +253,7 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 	config := c.GetCreateConfig()
 	hostConfig := c.GetCreateHostConfig()
 	networkConfig := client.GetNetworkConfig(c)
+	sanitizeContainerConfig(config, client.api.ClientVersion())
 
 	// simpleNetworkConfig is a networkConfig with only 1 network.
 	// see: https://github.com/docker/docker/issues/29265

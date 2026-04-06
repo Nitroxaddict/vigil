@@ -312,10 +312,14 @@ var _ = Describe("the client", func() {
 		})
 	})
 	Describe(`GetNetworkConfig`, func() {
-		When(`providing a container with a per-network MacAddress`, func() {
+		When(`providing a container with a per-network MacAddress on API < 1.44`, func() {
 			It(`should clear the MacAddress field`, func() {
+				oldDocker, _ := cli.NewClientWithOpts(
+					cli.WithHost(mockServer.URL()),
+					cli.WithHTTPClient(mockServer.HTTPTestServer.Client()),
+					cli.WithVersion("1.43"))
 				client := dockerClient{
-					api:           docker,
+					api:           oldDocker,
 					ClientOptions: ClientOptions{IncludeRestarting: false},
 				}
 				container := MockContainer(WithImageName("docker.io/prefix/imagename:latest"))
@@ -324,6 +328,24 @@ var _ = Describe("the client", func() {
 				}
 				container.containerInfo.NetworkSettings = &types.NetworkSettings{Networks: endpoints}
 				Expect(client.GetNetworkConfig(container).EndpointsConfig[`test`].MacAddress).To(Equal(""))
+			})
+		})
+		When(`providing a container with a per-network MacAddress on API >= 1.44`, func() {
+			It(`should preserve the MacAddress field`, func() {
+				newDocker, _ := cli.NewClientWithOpts(
+					cli.WithHost(mockServer.URL()),
+					cli.WithHTTPClient(mockServer.HTTPTestServer.Client()),
+					cli.WithVersion("1.44"))
+				client := dockerClient{
+					api:           newDocker,
+					ClientOptions: ClientOptions{IncludeRestarting: false},
+				}
+				container := MockContainer(WithImageName("docker.io/prefix/imagename:latest"))
+				endpoints := map[string]*network.EndpointSettings{
+					`test`: {MacAddress: "02:42:ac:11:00:02"},
+				}
+				container.containerInfo.NetworkSettings = &types.NetworkSettings{Networks: endpoints}
+				Expect(client.GetNetworkConfig(container).EndpointsConfig[`test`].MacAddress).To(Equal("02:42:ac:11:00:02"))
 			})
 		})
 		When(`providing a container with network aliases`, func() {
