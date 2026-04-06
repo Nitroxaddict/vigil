@@ -11,9 +11,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/containrrr/watchtower/pkg/api"
-	metricsAPI "github.com/containrrr/watchtower/pkg/api/metrics"
-	"github.com/containrrr/watchtower/pkg/metrics"
+	"github.com/Nitroxaddict/vigil/pkg/api"
+	metricsAPI "github.com/Nitroxaddict/vigil/pkg/api/metrics"
+	"github.com/Nitroxaddict/vigil/pkg/metrics"
 )
 
 const (

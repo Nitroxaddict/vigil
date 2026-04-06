@@ -3,13 +3,13 @@ package actions_test
 import (
 	"time"
 
-	"github.com/containrrr/watchtower/internal/actions"
-	"github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/actions"
+	"github.com/Nitroxaddict/vigil/pkg/types"
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 
-	. "github.com/containrrr/watchtower/internal/actions/mocks"
+	. "github.com/Nitroxaddict/vigil/internal/actions/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containrrr/watchtower/internal/meta"
-	ty "github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/meta"
+	ty "github.com/Nitroxaddict/vigil/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

@@ -3,7 +3,7 @@ package filters
 import (
 	"testing"
 
-	"github.com/containrrr/watchtower/pkg/container/mocks"
+	"github.com/Nitroxaddict/vigil/pkg/container/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

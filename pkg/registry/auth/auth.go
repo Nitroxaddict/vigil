@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/containrrr/watchtower/internal/meta"
-	"github.com/containrrr/watchtower/pkg/registry/helpers"
-	"github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/meta"
+	"github.com/Nitroxaddict/vigil/pkg/registry/helpers"
+	"github.com/Nitroxaddict/vigil/pkg/types"
 	ref "github.com/distribution/reference"
 	"github.com/sirupsen/logrus"
 )

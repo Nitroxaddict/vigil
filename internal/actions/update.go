@@ -3,12 +3,12 @@ package actions
 import (
 	"errors"
 
-	"github.com/containrrr/watchtower/internal/util"
-	"github.com/containrrr/watchtower/pkg/container"
-	"github.com/containrrr/watchtower/pkg/lifecycle"
-	"github.com/containrrr/watchtower/pkg/session"
-	"github.com/containrrr/watchtower/pkg/sorter"
-	"github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/util"
+	"github.com/Nitroxaddict/vigil/pkg/container"
+	"github.com/Nitroxaddict/vigil/pkg/lifecycle"
+	"github.com/Nitroxaddict/vigil/pkg/session"
+	"github.com/Nitroxaddict/vigil/pkg/sorter"
+	"github.com/Nitroxaddict/vigil/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 

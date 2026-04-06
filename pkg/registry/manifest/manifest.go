@@ -5,8 +5,8 @@ import (
 	"fmt"
 	url2 "net/url"
 
-	"github.com/containrrr/watchtower/pkg/registry/helpers"
-	"github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/pkg/registry/helpers"
+	"github.com/Nitroxaddict/vigil/pkg/types"
 	ref "github.com/distribution/reference"
 	"github.com/sirupsen/logrus"
 )
