@@ -289,19 +289,29 @@ func (client dockerClient) startContainer(c t.Container, imageOverride string) (
 		return "", err
 	}
 
+	// cleanup removes the created container if a subsequent step fails,
+	// freeing the name for a rollback attempt.
+	cleanup := func(err error) (t.ContainerID, error) {
+		log.Debugf("Removing partially created container %s due to error: %s", name, err)
+		if rmErr := client.api.ContainerRemove(bg, createdContainer.ID, container.RemoveOptions{Force: true}); rmErr != nil {
+			log.Errorf("Failed to remove partial container %s: %s", name, rmErr)
+		}
+		return "", err
+	}
+
 	if !(hostConfig.NetworkMode.IsHost()) {
 
 		for k := range simpleNetworkConfig.EndpointsConfig {
 			err = client.api.NetworkDisconnect(bg, k, createdContainer.ID, true)
 			if err != nil {
-				return "", err
+				return cleanup(err)
 			}
 		}
 
 		for k, v := range networkConfig.EndpointsConfig {
 			err = client.api.NetworkConnect(bg, k, createdContainer.ID, v)
 			if err != nil {
-				return "", err
+				return cleanup(err)
 			}
 		}
 
@@ -312,7 +322,10 @@ func (client dockerClient) startContainer(c t.Container, imageOverride string) (
 		return createdContainerID, nil
 	}
 
-	return createdContainerID, client.doStartContainer(bg, c, createdContainer)
+	if err := client.doStartContainer(bg, c, createdContainer); err != nil {
+		return cleanup(err)
+	}
+	return createdContainerID, nil
 
 }
 
