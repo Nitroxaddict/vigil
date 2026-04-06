@@ -312,6 +312,20 @@ var _ = Describe("the client", func() {
 		})
 	})
 	Describe(`GetNetworkConfig`, func() {
+		When(`providing a container with a per-network MacAddress`, func() {
+			It(`should clear the MacAddress field`, func() {
+				client := dockerClient{
+					api:           docker,
+					ClientOptions: ClientOptions{IncludeRestarting: false},
+				}
+				container := MockContainer(WithImageName("docker.io/prefix/imagename:latest"))
+				endpoints := map[string]*network.EndpointSettings{
+					`test`: {MacAddress: "02:42:ac:11:00:02"},
+				}
+				container.containerInfo.NetworkSettings = &types.NetworkSettings{Networks: endpoints}
+				Expect(client.GetNetworkConfig(container).EndpointsConfig[`test`].MacAddress).To(Equal(""))
+			})
+		})
 		When(`providing a container with network aliases`, func() {
 			It(`should omit the container ID alias`, func() {
 				client := dockerClient{

@@ -230,6 +230,9 @@ func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingCo
 	}
 
 	for _, ep := range config.EndpointsConfig {
+		// Clear per-network MacAddress (requires API 1.44, not supported on all daemons)
+		ep.MacAddress = ""
+
 		aliases := make([]string, 0, len(ep.Aliases))
 		cidAlias := c.ID().ShortID()
 
