@@ -101,10 +101,18 @@ var _ = Describe("the update action", func() {
 				Expect(client.TestData.TriedToRemoveImageCount).To(Equal(1))
 			})
 		})
-		When("performing a rolling restart update", func() {
+		When("performing a rolling restart update (default)", func() {
 			It("should try to remove the image once", func() {
 				client := CreateMockClient(getCommonTestData(""), false, false)
 				_, err := actions.Update(client, types.UpdateParams{Cleanup: true, RollingRestart: true})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(client.TestData.TriedToRemoveImageCount).To(Equal(1))
+			})
+		})
+		When("performing a batch restart update", func() {
+			It("should try to remove the image once", func() {
+				client := CreateMockClient(getCommonTestData(""), false, false)
+				_, err := actions.Update(client, types.UpdateParams{Cleanup: true, RollingRestart: false})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(client.TestData.TriedToRemoveImageCount).To(Equal(1))
 			})

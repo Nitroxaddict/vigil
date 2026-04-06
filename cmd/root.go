@@ -40,7 +40,7 @@ var (
 	notifier          t.Notifier
 	timeout           time.Duration
 	lifecycleHooks    bool
-	rollingRestart    bool
+	batchRestart      bool
 	scope             string
 	labelPrecedence   bool
 )
@@ -97,7 +97,10 @@ func PreRun(cmd *cobra.Command, _ []string) {
 	enableLabel, _ = f.GetBool("label-enable")
 	disableContainers, _ = f.GetStringSlice("disable-containers")
 	lifecycleHooks, _ = f.GetBool("enable-lifecycle-hooks")
-	rollingRestart, _ = f.GetBool("rolling-restart")
+	batchRestart, _ = f.GetBool("batch-restart")
+	if rollingRestartSet, _ := f.GetBool("rolling-restart"); rollingRestartSet {
+		log.Warn("--rolling-restart is deprecated and will be removed in v2. Rolling restart is now the default. Remove this flag from your configuration.")
+	}
 	scope, _ = f.GetString("scope")
 	labelPrecedence, _ = f.GetBool("label-take-precedence")
 
@@ -153,13 +156,13 @@ func Run(c *cobra.Command, names []string) {
 		os.Exit(0)
 	}
 
-	if rollingRestart && monitorOnly {
+	if !batchRestart && monitorOnly {
 		log.Fatal("Rolling restarts is not compatible with the global monitor only flag")
 	}
 
 	awaitDockerClient()
 
-	if err := actions.CheckForSanity(client, filter, rollingRestart); err != nil {
+	if err := actions.CheckForSanity(client, filter, !batchRestart); err != nil {
 		logNotifyExit(err)
 	}
 
@@ -365,7 +368,7 @@ func runUpdatesWithNotifications(filter t.Filter) *metrics.Metric {
 		Timeout:         timeout,
 		MonitorOnly:     monitorOnly,
 		LifecycleHooks:  lifecycleHooks,
-		RollingRestart:  rollingRestart,
+		RollingRestart:  !batchRestart,
 		LabelPrecedence: labelPrecedence,
 		NoPull:          noPull,
 	}

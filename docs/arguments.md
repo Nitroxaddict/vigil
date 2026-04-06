@@ -392,16 +392,19 @@ Environment Variable: WATCHTOWER_SCHEDULE
              Default: -
 ```
 
-## Rolling restart
-Restart one image at time instead of stopping and starting all at once.  Useful in conjunction with lifecycle hooks
-to implement zero-downtime deploy.
+## Batch restart
+Stop all containers before restarting, instead of the default rolling restart (one at a time).
+Rolling restart is safer as it limits the blast radius of a failed update to a single container.
 
 ```text
-            Argument: --rolling-restart
-Environment Variable: WATCHTOWER_ROLLING_RESTART
+            Argument: --batch-restart
+Environment Variable: WATCHTOWER_BATCH_RESTART
                 Type: Boolean
              Default: false
 ```
+
+> **Note:** `--rolling-restart` is deprecated. Rolling restart is now the default behavior.
+> Use `--batch-restart` to opt into the old batch behavior.
 
 ## Wait until timeout
 Timeout before the container is forcefully stopped. When set, this option will change the default (`10s`) wait time to the given value. An example: `--stop-timeout 30s` will set the timeout to 30 seconds.

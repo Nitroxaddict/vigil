@@ -20,8 +20,9 @@
 
 - Updated to Docker SDK v27 (fixes "client version too old" errors)
 - Go 1.22+
-- Docker API version bumped from 1.25 to 1.44
+- Docker API version bumped from 1.25 to 1.43
 - New `dev.vigil.*` labels and `VIGIL_*` env vars
+- Rolling restart is now the default (safer — limits blast radius to one container)
 - Fully backward-compatible with existing Watchtower labels and env vars
 
 ## Quick Start
@@ -56,7 +57,7 @@ Vigil supports both its own naming and the legacy Watchtower naming. Vigil names
 | `VIGIL_CLEANUP` | `WATCHTOWER_CLEANUP` | Remove old images after updating |
 | `VIGIL_LABEL_ENABLE` | `WATCHTOWER_LABEL_ENABLE` | Only update containers with enable label |
 | `VIGIL_MONITOR_ONLY` | `WATCHTOWER_MONITOR_ONLY` | Only monitor, don't update |
-| `VIGIL_ROLLING_RESTART` | `WATCHTOWER_ROLLING_RESTART` | Restart containers one at a time |
+| `VIGIL_BATCH_RESTART` | `WATCHTOWER_BATCH_RESTART` | Stop all containers before restarting (default: rolling) |
 | `VIGIL_HTTP_API_UPDATE` | `WATCHTOWER_HTTP_API_UPDATE` | Enable HTTP API for on-demand updates |
 | `VIGIL_NO_PULL` | `WATCHTOWER_NO_PULL` | Do not pull new images |
 | `VIGIL_NO_RESTART` | `WATCHTOWER_NO_RESTART` | Do not restart containers |

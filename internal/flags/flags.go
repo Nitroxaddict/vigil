@@ -148,10 +148,19 @@ func RegisterSystemFlags(rootCmd *cobra.Command) {
 		"Enable the execution of commands triggered by pre- and post-update lifecycle hooks")
 
 	flags.BoolP(
+		"batch-restart",
+		"",
+		envBool("WATCHTOWER_BATCH_RESTART"),
+		"Stop all containers before restarting (default: rolling, one at a time)")
+
+	// Deprecated: rolling-restart is now the default behavior.
+	// Kept as a hidden no-op for backward compatibility.
+	flags.BoolP(
 		"rolling-restart",
 		"",
-		envBool("WATCHTOWER_ROLLING_RESTART"),
-		"Restart containers one at a time")
+		false,
+		"Deprecated: rolling restart is now the default. Use --batch-restart to opt out.")
+	flags.MarkHidden("rolling-restart")
 
 	flags.BoolP(
 		"http-api-update",
