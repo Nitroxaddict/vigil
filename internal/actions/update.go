@@ -216,7 +216,7 @@ func restartStaleContainer(container types.Container, client container.Client, p
 	if container.IsWatchtower() {
 		if err := client.RenameContainer(container, util.RandName()); err != nil {
 			log.Error(err)
-			return nil
+			return err
 		}
 	}
 
