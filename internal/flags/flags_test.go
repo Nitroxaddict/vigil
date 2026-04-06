@@ -290,6 +290,7 @@ func TestFlagsArePrecentInDocumentation(t *testing.T) {
 		"notification-gotify-url":       "legacy",
 		"notification-slack-icon-emoji": "legacy",
 		"notification-slack-icon-url":   "legacy",
+		"rolling-restart":               "deprecated, rolling restart is now the default",
 	}
 
 	cmd := new(cobra.Command)
