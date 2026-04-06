@@ -29,6 +29,7 @@ type Client interface {
 	GetContainer(containerID t.ContainerID) (t.Container, error)
 	StopContainer(t.Container, time.Duration) error
 	StartContainer(t.Container) (t.ContainerID, error)
+	StartContainerWithImage(t.Container, string) (t.ContainerID, error)
 	RenameContainer(t.Container, string) error
 	IsContainerStale(t.Container, t.UpdateParams) (stale bool, latestImage t.ImageID, err error)
 	ExecuteCommand(containerID t.ContainerID, command string, timeout int) (SkipUpdate bool, err error)
@@ -249,11 +250,23 @@ func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingCo
 }
 
 func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) {
+	return client.startContainer(c, "")
+}
+
+func (client dockerClient) StartContainerWithImage(c t.Container, imageID string) (t.ContainerID, error) {
+	return client.startContainer(c, imageID)
+}
+
+func (client dockerClient) startContainer(c t.Container, imageOverride string) (t.ContainerID, error) {
 	bg := context.Background()
 	config := c.GetCreateConfig()
 	hostConfig := c.GetCreateHostConfig()
 	networkConfig := client.GetNetworkConfig(c)
 	sanitizeContainerConfig(config, client.api.ClientVersion())
+
+	if imageOverride != "" {
+		config.Image = imageOverride
+	}
 
 	// simpleNetworkConfig is a networkConfig with only 1 network.
 	// see: https://github.com/docker/docker/issues/29265

@@ -222,8 +222,15 @@ func restartStaleContainer(container types.Container, client container.Client, p
 
 	if !params.NoRestart {
 		if newContainerID, err := client.StartContainer(container); err != nil {
-			log.Error(err)
-			return err
+			log.Errorf("Failed to start %s with new image: %s", container.Name(), err)
+			oldImageID := container.ContainerInfo().Image
+			log.Infof("Rolling back %s to previous image %s", container.Name(), types.ImageID(oldImageID).ShortID())
+			if _, rollbackErr := client.StartContainerWithImage(container, oldImageID); rollbackErr != nil {
+				log.Errorf("Rollback of %s also failed: %s", container.Name(), rollbackErr)
+				return err
+			}
+			log.Infof("Successfully rolled back %s to previous image", container.Name())
+			return nil
 		} else if container.ToRestart() && params.LifecycleHooks {
 			lifecycle.ExecutePostUpdateCommand(client, newContainerID)
 		}
