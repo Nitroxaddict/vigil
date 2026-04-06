@@ -228,42 +228,43 @@ func awaitDockerClient() {
 }
 
 func formatDuration(d time.Duration) string {
-	sb := strings.Builder{}
-
-	hours := int64(d.Hours())
+	totalHours := int64(d.Hours())
+	days := totalHours / 24
+	hours := totalHours % 24
 	minutes := int64(math.Mod(d.Minutes(), 60))
 	seconds := int64(math.Mod(d.Seconds(), 60))
 
-	if hours == 1 {
-		sb.WriteString("1 hour")
-	} else if hours != 0 {
-		sb.WriteString(strconv.FormatInt(hours, 10))
-		sb.WriteString(" hours")
+	var parts []string
+
+	if days == 1 {
+		parts = append(parts, "1 day")
+	} else if days != 0 {
+		parts = append(parts, strconv.FormatInt(days, 10)+" days")
 	}
 
-	if hours != 0 && (seconds != 0 || minutes != 0) {
-		sb.WriteString(", ")
+	if hours == 1 {
+		parts = append(parts, "1 hour")
+	} else if hours != 0 {
+		parts = append(parts, strconv.FormatInt(hours, 10)+" hours")
 	}
 
 	if minutes == 1 {
-		sb.WriteString("1 minute")
+		parts = append(parts, "1 minute")
 	} else if minutes != 0 {
-		sb.WriteString(strconv.FormatInt(minutes, 10))
-		sb.WriteString(" minutes")
-	}
-
-	if minutes != 0 && (seconds != 0) {
-		sb.WriteString(", ")
+		parts = append(parts, strconv.FormatInt(minutes, 10)+" minutes")
 	}
 
 	if seconds == 1 {
-		sb.WriteString("1 second")
-	} else if seconds != 0 || (hours == 0 && minutes == 0) {
-		sb.WriteString(strconv.FormatInt(seconds, 10))
-		sb.WriteString(" seconds")
+		parts = append(parts, "1 second")
+	} else if seconds != 0 {
+		parts = append(parts, strconv.FormatInt(seconds, 10)+" seconds")
 	}
 
-	return sb.String()
+	if len(parts) == 0 {
+		return "0 seconds"
+	}
+
+	return strings.Join(parts, ", ")
 }
 
 func writeStartupMessage(c *cobra.Command, sched time.Time, filtering string) {
