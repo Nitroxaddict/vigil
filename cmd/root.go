@@ -98,8 +98,11 @@ func PreRun(cmd *cobra.Command, _ []string) {
 	disableContainers, _ = f.GetStringSlice("disable-containers")
 	lifecycleHooks, _ = f.GetBool("enable-lifecycle-hooks")
 	batchRestart, _ = f.GetBool("batch-restart")
-	if rollingRestartSet, _ := f.GetBool("rolling-restart"); rollingRestartSet {
+	if f.Changed("rolling-restart") {
 		log.Warn("--rolling-restart is deprecated and will be removed in v2. Rolling restart is now the default. Remove this flag from your configuration.")
+	}
+	if os.Getenv("WATCHTOWER_ROLLING_RESTART") != "" || os.Getenv("VIGIL_ROLLING_RESTART") != "" {
+		log.Warn("WATCHTOWER_ROLLING_RESTART / VIGIL_ROLLING_RESTART environment variables are deprecated and ignored. Rolling restart is now the default.")
 	}
 	scope, _ = f.GetString("scope")
 	labelPrecedence, _ = f.GetBool("label-take-precedence")

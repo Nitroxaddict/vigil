@@ -398,7 +398,7 @@ Rolling restart is safer as it limits the blast radius of a failed update to a s
 
 ```text
             Argument: --batch-restart
-Environment Variable: WATCHTOWER_BATCH_RESTART
+Environment Variable: VIGIL_BATCH_RESTART / WATCHTOWER_BATCH_RESTART
                 Type: Boolean
              Default: false
 ```
