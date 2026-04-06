@@ -1,6 +1,6 @@
 package session
 
-import wt "github.com/containrrr/watchtower/pkg/types"
+import wt "github.com/Nitroxaddict/vigil/pkg/types"
 
 // State indicates what the current state is of the container
 type State int

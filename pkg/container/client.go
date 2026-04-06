@@ -15,9 +15,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"context"
 
-	"github.com/containrrr/watchtower/pkg/registry"
-	"github.com/containrrr/watchtower/pkg/registry/digest"
-	t "github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/pkg/registry"
+	"github.com/Nitroxaddict/vigil/pkg/registry/digest"
+	t "github.com/Nitroxaddict/vigil/pkg/types"
 )
 
 const defaultStopSignal = "SIGTERM"

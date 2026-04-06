@@ -50,7 +50,7 @@ jobs:
       - name: Build binary
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-            -ldflags "-s -w -X github.com/containrrr/watchtower/internal/meta.Version=${{ steps.version.outputs.version }}" \
+            -ldflags "-s -w -X github.com/Nitroxaddict/vigil/internal/meta.Version=${{ steps.version.outputs.version }}" \
             -o vigil \
             .
 

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	shoutrrrSmtp "github.com/containrrr/shoutrrr/pkg/services/smtp"
-	"github.com/containrrr/watchtower/internal/meta"
-	t "github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/meta"
+	t "github.com/Nitroxaddict/vigil/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 

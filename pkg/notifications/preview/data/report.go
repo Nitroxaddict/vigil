@@ -3,7 +3,7 @@ package data
 import (
 	"sort"
 
-	"github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/pkg/types"
 )
 
 // State is the outcome of a container in a session report

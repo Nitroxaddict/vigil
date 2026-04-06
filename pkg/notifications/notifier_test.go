@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/containrrr/watchtower/cmd"
-	"github.com/containrrr/watchtower/internal/flags"
-	"github.com/containrrr/watchtower/pkg/notifications"
+	"github.com/Nitroxaddict/vigil/cmd"
+	"github.com/Nitroxaddict/vigil/internal/flags"
+	"github.com/Nitroxaddict/vigil/pkg/notifications"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

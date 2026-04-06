@@ -1,4 +1,4 @@
-module github.com/containrrr/watchtower
+module github.com/Nitroxaddict/vigil
 
 go 1.25.0
 

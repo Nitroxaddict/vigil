@@ -4,10 +4,10 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"time"
 
-	"github.com/containrrr/watchtower/internal/util"
-	"github.com/containrrr/watchtower/pkg/container/mocks"
-	"github.com/containrrr/watchtower/pkg/filters"
-	t "github.com/containrrr/watchtower/pkg/types"
+	"github.com/Nitroxaddict/vigil/internal/util"
+	"github.com/Nitroxaddict/vigil/pkg/container/mocks"
+	"github.com/Nitroxaddict/vigil/pkg/filters"
+	t "github.com/Nitroxaddict/vigil/pkg/types"
 
 	"github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
