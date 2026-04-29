@@ -20,7 +20,8 @@
 
 - Updated to Docker SDK v27 (fixes "client version too old" errors)
 - Go 1.22+
-- Docker API version bumped from 1.25 to 1.43
+- Auto-negotiates Docker API version with the daemon — no more `DOCKER_API_VERSION` workarounds
+- Multi-arch image: native `linux/amd64` and `linux/arm64` (no emulation on Apple Silicon)
 - New `dev.vigil.*` labels and `VIGIL_*` env vars
 - Rolling restart is now the default (safer — limits blast radius to one container)
 - Fully backward-compatible with existing Watchtower labels and env vars
@@ -35,6 +36,8 @@ docker run --detach \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     ghcr.io/nitroxaddict/vigil
 ```
+
+The `:latest` tag is a multi-arch manifest list — Docker pulls the right binary for your host (`amd64` or `arm64`) automatically. No platform flag needed on Apple Silicon, Raspberry Pi, or x86 Linux.
 
 ## Migration from Watchtower
 
