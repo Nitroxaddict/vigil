@@ -1,6 +1,6 @@
-site_name: Watchtower
-site_url: https://containrrr.dev/watchtower/
-repo_url: https://github.com/containrrr/watchtower/
+site_name: Vigil
+site_url: https://github.com/Nitroxaddict/vigil/
+repo_url: https://github.com/Nitroxaddict/vigil/
 edit_uri: edit/main/docs/
 theme:
   name: 'material'
@@ -29,8 +29,8 @@ markdown_extensions:
     - pymdownx.magiclink:
         repo_url_shortener: True
         provider: github
-        user: containrrr
-        repo: watchtower
+        user: Nitroxaddict
+        repo: vigil
     - pymdownx.saneheaders
     - pymdownx.tabbed:
         alternate_style: true

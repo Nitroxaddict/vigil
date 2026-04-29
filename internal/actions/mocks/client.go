@@ -8,7 +8,7 @@ import (
 	t "github.com/Nitroxaddict/vigil/pkg/types"
 )
 
-// MockClient is a mock that passes as a watchtower Client
+// MockClient is a mock that passes as a vigil Client
 type MockClient struct {
 	TestData      *TestData
 	pullImages    bool
@@ -28,7 +28,7 @@ func (testdata *TestData) TriedToRemoveImage() bool {
 	return testdata.TriedToRemoveImageCount > 0
 }
 
-// CreateMockClient creates a mock watchtower Client for usage in tests
+// CreateMockClient creates a mock vigil Client for usage in tests
 func CreateMockClient(data *TestData, pullImages bool, removeVolumes bool) MockClient {
 	return MockClient{
 		data,

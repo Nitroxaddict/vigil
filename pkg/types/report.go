@@ -11,7 +11,7 @@ type Report interface {
 	All() []ContainerReport
 }
 
-// ContainerReport represents a container that was included in watchtower session
+// ContainerReport represents a container that was included in a vigil session
 type ContainerReport interface {
 	ID() ContainerID
 	Name() string

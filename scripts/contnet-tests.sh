@@ -16,11 +16,11 @@ if [ -z "$OPENVPN_PASSWORD" ]; then exit_env_err "OPENVPN_PASSWORD"; fi
 export SERVER_COUNTRIES=${SERVER_COUNTRIES:"Sweden"}
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 COMPOSE_FILE="$REPO_ROOT/dockerfiles/container-networking/docker-compose.yml"
-DEFAULT_WATCHTOWER="$REPO_ROOT/watchtower"
-WATCHTOWER="$*"
-WATCHTOWER=${WATCHTOWER:-$DEFAULT_WATCHTOWER}
+DEFAULT_VIGIL="$REPO_ROOT/vigil"
+VIGIL="$*"
+VIGIL=${VIGIL:-$DEFAULT_VIGIL}
 echo "repo root path is $REPO_ROOT"
-echo "watchtower path is $WATCHTOWER"
+echo "vigil path is $VIGIL"
 echo "compose file path is $COMPOSE_FILE"
 
 echo; echo "=== Forcing network container producer update..."
@@ -34,8 +34,8 @@ echo; echo "=== Creating containers..."
 
 docker compose -p "wt-contnet" -f "$COMPOSE_FILE" up -d
 
-echo; echo "=== Running watchtower"
-$WATCHTOWER --run-once
+echo; echo "=== Running vigil"
+$VIGIL --run-once
 
 echo; echo "=== Removing containers..."
 
