@@ -1,25 +1,32 @@
-FROM alpine:3.20 AS alpine
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS build
+ARG TARGETOS TARGETARCH VERSION=dev
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
+    -ldflags "-s -w -X github.com/Nitroxaddict/vigil/internal/meta.Version=$VERSION" \
+    -o /out/vigil .
 
-RUN apk add --no-cache \
-    ca-certificates \
-    tzdata
+FROM --platform=$BUILDPLATFORM alpine:3.20 AS certs
+RUN apk add --no-cache ca-certificates tzdata
 
 FROM scratch
 
 LABEL "dev.vigil"="true"
 LABEL "com.centurylinklabs.watchtower"="true"
 
-COPY --from=alpine \
+COPY --from=certs \
     /etc/ssl/certs/ca-certificates.crt \
     /etc/ssl/certs/ca-certificates.crt
-COPY --from=alpine \
+COPY --from=certs \
     /usr/share/zoneinfo \
     /usr/share/zoneinfo
 
 EXPOSE 8080
 
-COPY vigil /watchtower
+COPY --from=build /out/vigil /vigil
 
-HEALTHCHECK CMD [ "/watchtower", "--health-check"]
+HEALTHCHECK CMD [ "/vigil", "--health-check"]
 
-ENTRYPOINT ["/watchtower"]
+ENTRYPOINT ["/vigil"]
