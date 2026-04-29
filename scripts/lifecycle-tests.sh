@@ -6,7 +6,8 @@ IMAGE=server
 CONTAINER=server
 LINKED_IMAGE=linked
 LINKED_CONTAINER=linked
-WATCHTOWER_INTERVAL=2
+VIGIL_INTERVAL=2
+VIGIL_PID=""
 
 function remove_container {
 	docker kill $1 >> /dev/null || true && docker rm -v $1 >> /dev/null || true
@@ -18,14 +19,17 @@ function cleanup {
   sleep 2
   remove_container $CONTAINER
   remove_container $LINKED_CONTAINER
-  pkill -9 -f watchtower >> /dev/null || true
+  if [ -n "$VIGIL_PID" ]; then
+    kill "$VIGIL_PID" >> /dev/null 2>&1 || true
+    wait "$VIGIL_PID" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
-DEFAULT_WATCHTOWER="$(dirname "${BASH_SOURCE[0]}")/../watchtower"
-WATCHTOWER=$1
-WATCHTOWER=${WATCHTOWER:-$DEFAULT_WATCHTOWER}
-echo "watchtower path is $WATCHTOWER"
+DEFAULT_VIGIL="$(dirname "${BASH_SOURCE[0]}")/../vigil"
+VIGIL=$1
+VIGIL=${VIGIL:-$DEFAULT_VIGIL}
+echo "vigil path is $VIGIL"
 
 ##################################################################################
 ##### PREPARATION ################################################################
@@ -51,7 +55,7 @@ EOF
 )
 
 # Create temporary directory to build docker image
-TMP_DIR="/tmp/watchtower-commands-test"
+TMP_DIR="/tmp/vigil-commands-test"
 mkdir -p $TMP_DIR
 
 # Create simple http server
@@ -74,9 +78,10 @@ function builddocker {
 	docker build $TMP_DIR -t $IMAGE >> /dev/null
 }
 
-# Start watchtower
-echo "Starting watchtower"
-$WATCHTOWER -i $WATCHTOWER_INTERVAL --no-pull --stop-timeout 2s --enable-lifecycle-hooks $CONTAINER $LINKED_CONTAINER &
+# Start vigil
+echo "Starting vigil"
+"$VIGIL" -i "$VIGIL_INTERVAL" --no-pull --stop-timeout 2s --enable-lifecycle-hooks "$CONTAINER" "$LINKED_CONTAINER" &
+VIGIL_PID=$!
 sleep 3
 
 echo "#################################################################"
@@ -98,10 +103,10 @@ if [ $RESP != "default" ]; then
 	exit 1
 fi
 
-# Build updated image to trigger watchtower update
+# Build updated image to trigger vigil update
 builddocker
 
-WAIT_AMOUNT=$(($WATCHTOWER_INTERVAL * 3))
+WAIT_AMOUNT=$(($VIGIL_INTERVAL * 3))
 echo "Wait for $WAIT_AMOUNT seconds"
 sleep $WAIT_AMOUNT
 
@@ -135,10 +140,10 @@ if [ $RESP != "default" ]; then
 	exit 1
 fi
 
-# Build updated image to trigger watchtower update
+# Build updated image to trigger vigil update
 builddocker
 
-WAIT_AMOUNT=$(($WATCHTOWER_INTERVAL * 3))
+WAIT_AMOUNT=$(($VIGIL_INTERVAL * 3))
 echo "Wait for $WAIT_AMOUNT seconds"
 sleep $WAIT_AMOUNT
 
@@ -186,10 +191,10 @@ if [ $RESP != "default" ]; then
 	exit 1
 fi
 
-# Build updated image to trigger watchtower update
+# Build updated image to trigger vigil update
 builddocker
 
-WAIT_AMOUNT=$(($WATCHTOWER_INTERVAL * 3))
+WAIT_AMOUNT=$(($VIGIL_INTERVAL * 3))
 echo "Wait for $WAIT_AMOUNT seconds"
 sleep $WAIT_AMOUNT
 

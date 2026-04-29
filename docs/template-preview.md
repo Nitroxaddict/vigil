@@ -115,7 +115,7 @@
             ...arrFromCount("debug"),
         ] : [];
         console.log("Levels: %o", levels);
-        const output = WATCHTOWER.tplprev(input, states, levels);
+        const output = VIGIL.tplprev(input, states, levels);
         console.log('Output: \n%o', output);
         if (output.startsWith('Error: ')) {
             document.querySelector('#result').innerHTML = `<b>Error</b>: ${output.substring(7)}`;

@@ -47,7 +47,7 @@ var (
 
 var rootCmd = NewRootCommand()
 
-// NewRootCommand creates the root command for watchtower
+// NewRootCommand creates the root command for vigil
 func NewRootCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "vigil",

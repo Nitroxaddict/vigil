@@ -144,7 +144,7 @@ func stopContainersInReversedOrder(containers []types.Container, client containe
 
 func stopStaleContainer(container types.Container, client container.Client, params types.UpdateParams) error {
 	if container.IsWatchtower() {
-		log.Debugf("This is the watchtower container %s", container.Name())
+		log.Debugf("This is the vigil container %s", container.Name())
 		return nil
 	}
 
@@ -219,7 +219,7 @@ func cleanupImages(client container.Client, imageIDs map[types.ImageID]bool) {
 }
 
 func restartStaleContainer(container types.Container, client container.Client, params types.UpdateParams) error {
-	// Since we can't shutdown a watchtower container immediately, we need to
+	// Since we can't shutdown a vigil container immediately, we need to
 	// start the new one while the old one is still running. This prevents us
 	// from re-using the same container name so we first rename the current
 	// instance so that the new one can adopt the old name.

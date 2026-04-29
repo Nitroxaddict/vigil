@@ -13,9 +13,9 @@ import (
 )
 
 func main() {
-	fmt.Println("watchtower/tplprev v" + meta.Version)
+	fmt.Println("vigil/tplprev v" + meta.Version)
 
-	js.Global().Set("WATCHTOWER", js.ValueOf(map[string]any{
+	js.Global().Set("VIGIL", js.ValueOf(map[string]any{
 		"tplprev": js.FuncOf(jsTplPrev),
 	}))
 	<-make(chan bool)

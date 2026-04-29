@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "watchtower/tplprev %v\n\n", meta.Version)
+	fmt.Fprintf(os.Stderr, "vigil/tplprev %v\n\n", meta.Version)
 
 	var states string
 	var entries string
