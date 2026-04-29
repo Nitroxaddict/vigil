@@ -7,6 +7,7 @@ CONTAINER=server
 LINKED_IMAGE=linked
 LINKED_CONTAINER=linked
 VIGIL_INTERVAL=2
+VIGIL_PID=""
 
 function remove_container {
 	docker kill $1 >> /dev/null || true && docker rm -v $1 >> /dev/null || true
@@ -18,7 +19,10 @@ function cleanup {
   sleep 2
   remove_container $CONTAINER
   remove_container $LINKED_CONTAINER
-  pkill -9 -f vigil >> /dev/null || true
+  if [ -n "$VIGIL_PID" ]; then
+    kill "$VIGIL_PID" >> /dev/null 2>&1 || true
+    wait "$VIGIL_PID" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
@@ -76,7 +80,8 @@ function builddocker {
 
 # Start vigil
 echo "Starting vigil"
-$VIGIL -i $VIGIL_INTERVAL --no-pull --stop-timeout 2s --enable-lifecycle-hooks $CONTAINER $LINKED_CONTAINER &
+"$VIGIL" -i "$VIGIL_INTERVAL" --no-pull --stop-timeout 2s --enable-lifecycle-hooks "$CONTAINER" "$LINKED_CONTAINER" &
+VIGIL_PID=$!
 sleep 3
 
 echo "#################################################################"

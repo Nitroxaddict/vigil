@@ -71,7 +71,7 @@ func runNotifyUpgradeE(cmd *cobra.Command, _ []string) error {
 		containerID = cid.ShortID()
 	}
 	logf("To get the environment file, use:")
-	logf("cp %v:%v ./vigil-notifications.env", containerID, outFile.Name())
+	logf("docker cp %v:%v ./vigil-notifications.env", containerID, outFile.Name())
 	logf("")
 	logf("Note: This file will be removed in 5 minutes or when this container is stopped!")
 
