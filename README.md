@@ -19,10 +19,13 @@
 **Vigil** picks up where Watchtower left off:
 
 - Updated to Docker SDK v27 (fixes "client version too old" errors)
-- Go 1.22+
-- Docker API version bumped from 1.25 to 1.43
+- Go 1.25
+- Negotiates Docker API version with the daemon (no more pinned version)
+- Multi-arch images (amd64 + arm64), built natively
+- Rolling restart is the default (limits blast radius to one container)
+- Automatic rollback to the previous image if a recreated container fails to start
+- TLS verification enforced for registry digest checks
 - New `dev.vigil.*` labels and `VIGIL_*` env vars
-- Rolling restart is now the default (safer — limits blast radius to one container)
 - Fully backward-compatible with existing Watchtower labels and env vars
 
 ## Quick Start
