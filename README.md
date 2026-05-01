@@ -81,7 +81,7 @@ This applies to **every** env var and label, including ones not enumerated in th
 | `VIGIL_NOTIFICATION_URL` | `WATCHTOWER_NOTIFICATION_URL` | Shoutrrr notification URL(s) |
 | `VIGIL_NOTIFICATION_TITLE_TAG` | `WATCHTOWER_NOTIFICATION_TITLE_TAG` | Prefix added to notification subject/title |
 
-Email-, Slack-, MS Teams- and Gotify-specific options (SMTP server, hook URLs, tokens, etc.) follow the same pattern: every `WATCHTOWER_NOTIFICATION_*` variable accepts a `VIGIL_NOTIFICATION_*` equivalent. See the [original Watchtower notification docs](https://containrrr.dev/watchtower/notifications/) for the full reference.
+Email-, Slack-, MS Teams- and Gotify-specific options (SMTP server, hook URLs, tokens, etc.) follow the same pattern: every `WATCHTOWER_NOTIFICATION_*` variable accepts a `VIGIL_NOTIFICATION_*` equivalent. Run `vigil --help` for the complete flag list.
 
 ### Container Labels
 
@@ -93,8 +93,6 @@ Email-, Slack-, MS Teams- and Gotify-specific options (SMTP server, hook URLs, t
 | `dev.vigil.stop-signal` | `com.centurylinklabs.watchtower.stop-signal` | Custom stop signal |
 | `dev.vigil.depends-on` | `com.centurylinklabs.watchtower.depends-on` | Container dependencies |
 | `dev.vigil.scope` | `com.centurylinklabs.watchtower.scope` | Monitoring scope |
-
-See the [original Watchtower documentation](https://containrrr.dev/watchtower) for full details on all options.
 
 ## Original Contributors
 
