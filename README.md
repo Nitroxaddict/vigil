@@ -49,7 +49,9 @@ That's it. All your existing `com.centurylinklabs.watchtower.*` labels and `WATC
 
 ## Configuration
 
-Vigil supports both its own naming and the legacy Watchtower naming. Vigil names take precedence when both are set.
+`VIGIL_*` env vars and `dev.vigil.*` labels are the canonical names. The original `WATCHTOWER_*` env vars and `com.centurylinklabs.watchtower.*` labels are accepted for backward compatibility but **will be removed in a future release** — prefer the Vigil names. When both are set, the Vigil name wins.
+
+This applies to **every** env var and label, including ones not enumerated in the tables below.
 
 ### Environment Variables
 
@@ -66,6 +68,20 @@ Vigil supports both its own naming and the legacy Watchtower naming. Vigil names
 | `VIGIL_NO_RESTART` | `WATCHTOWER_NO_RESTART` | Do not restart containers |
 | `VIGIL_INCLUDE_STOPPED` | `WATCHTOWER_INCLUDE_STOPPED` | Include stopped containers |
 | `VIGIL_LIFECYCLE_HOOKS` | `WATCHTOWER_LIFECYCLE_HOOKS` | Enable pre/post update hooks |
+
+### Notification Environment Variables
+
+| Vigil | Watchtower (legacy) | Description |
+|-------|---------------------|-------------|
+| `VIGIL_NOTIFICATIONS` | `WATCHTOWER_NOTIFICATIONS` | Notification types to enable (`email`, `slack`, `gotify`, `msteams`, `shoutrrr`) |
+| `VIGIL_NOTIFICATIONS_LEVEL` | `WATCHTOWER_NOTIFICATIONS_LEVEL` | Log level for notifications (default: `info`) |
+| `VIGIL_NOTIFICATIONS_HOSTNAME` | `WATCHTOWER_NOTIFICATIONS_HOSTNAME` | Hostname shown in notification title |
+| `VIGIL_NOTIFICATION_REPORT` | `WATCHTOWER_NOTIFICATION_REPORT` | Use the structured per-container report template instead of the log-dump default |
+| `VIGIL_NOTIFICATION_TEMPLATE` | `WATCHTOWER_NOTIFICATION_TEMPLATE` | Custom Go template for the notification body |
+| `VIGIL_NOTIFICATION_URL` | `WATCHTOWER_NOTIFICATION_URL` | Shoutrrr notification URL(s) |
+| `VIGIL_NOTIFICATION_TITLE_TAG` | `WATCHTOWER_NOTIFICATION_TITLE_TAG` | Prefix added to notification subject/title |
+
+Email-, Slack-, MS Teams- and Gotify-specific options (SMTP server, hook URLs, tokens, etc.) follow the same pattern: every `WATCHTOWER_NOTIFICATION_*` variable accepts a `VIGIL_NOTIFICATION_*` equivalent. See the [original Watchtower notification docs](https://containrrr.dev/watchtower/notifications/) for the full reference.
 
 ### Container Labels
 
