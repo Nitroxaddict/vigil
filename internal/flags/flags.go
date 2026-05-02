@@ -84,7 +84,7 @@ func RegisterSystemFlags(rootCmd *cobra.Command) {
 		"label-enable",
 		"e",
 		envBool("WATCHTOWER_LABEL_ENABLE"),
-		"Watch containers where the com.centurylinklabs.watchtower.enable label is true")
+		"Watch containers where the dev.vigil.enable label is true (legacy: com.centurylinklabs.watchtower.enable)")
 
 	flags.StringSliceP(
 		"disable-containers",
