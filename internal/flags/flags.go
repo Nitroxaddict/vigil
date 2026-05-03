@@ -286,7 +286,7 @@ func RegisterNotificationFlags(rootCmd *cobra.Command) {
 		`Currently inert: shoutrrr v0.8 (the SMTP backend) does not expose an
 InsecureSkipVerify option, so this flag cannot disable certificate
 verification. Encryption (STARTTLS/Auto) is always preserved. A warning
-is logged at startup if this flag is set. See docs/notifications.md.`)
+is logged at startup if this flag is set.`)
 
 	flags.StringP(
 		"notification-email-server-user",
@@ -368,7 +368,7 @@ is logged at startup if this flag is set. See docs/notifications.md.`)
 DisableTLS, which would also switch the URL to http://. A warning is
 logged at startup if this flag is set with an https:// URL. For an
 http:// URL the request is plaintext and shoutrrr already skips
-verification on HTTP→HTTPS redirects. See docs/notifications.md.`)
+verification on HTTP→HTTPS redirects.`)
 
 	flags.String(
 		"notification-template",
