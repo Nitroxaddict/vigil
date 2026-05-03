@@ -411,9 +411,6 @@ var _ = Describe("notifications", func() {
 		})
 
 		It("should keep the http scheme (DisableTLS) when the flag is set with http://", func() {
-			// The vigil shoutrrr URL form does not surface DisableTLS as a
-			// query param; it is implicit in the path-style URL. We assert on
-			// the produced string equality with the no-flag http:// case.
 			expectedOutput := fmt.Sprintf("gotify://%s/%s?disabletls=Yes&title=", host, token)
 
 			args := []string{
