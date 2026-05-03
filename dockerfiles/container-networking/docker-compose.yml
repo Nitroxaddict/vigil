@@ -14,4 +14,4 @@ services:
     image: nginx:1.25.1
     network_mode: "service:producer"
     labels:
-      - "com.centurylinklabs.watchtower.depends-on=/wt-contnet-producer-1"
+      - "dev.vigil.depends-on=/wt-contnet-producer-1"

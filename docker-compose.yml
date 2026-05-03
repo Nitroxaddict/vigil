@@ -1,11 +1,11 @@
 version: '3.7'
 
 services:
-  watchtower:
-    container_name: watchtower
+  vigil:
+    container_name: vigil
     build:
       context: ./
-      dockerfile: dockerfiles/Dockerfile.dev-self-contained
+      dockerfile: dockerfiles/Dockerfile.release
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
@@ -35,7 +35,7 @@ services:
   child:
     image: nginx:alpine
     labels:
-      com.centurylinklabs.watchtower.depends-on: parent
+      dev.vigil.depends-on: parent
     container_name: child
 
 volumes:
