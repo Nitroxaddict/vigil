@@ -1,7 +1,11 @@
 language: en
 reviews:
   auto_review:
-    enabled: true
+    # Disabled 2026-05-03: PR review is now handled by the Reviewer agent
+    # in the self-hosted Multica workspace, which reviews against the
+    # approved plan rather than generic best-practice criteria. Flip back
+    # to true to re-enable CodeRabbit auto-review.
+    enabled: false
     drafts: false
   path_instructions:
     - path: "pkg/**/*.go"
