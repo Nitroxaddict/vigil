@@ -17,14 +17,18 @@ func (c ByCreated) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 // Less will compare two elements (identified by index) in the Container
 // list by created-date.
 func (c ByCreated) Less(i, j int) bool {
-	t1, err := time.Parse(time.RFC3339Nano, c[i].ContainerInfo().Created)
-	if err != nil {
-		t1 = time.Now()
+	// Single fallback time per call so Less is deterministic when both
+	// timestamps are malformed — sort.Sort requires strict weak ordering.
+	now := time.Now()
+
+	t1, err1 := time.Parse(time.RFC3339Nano, c[i].ContainerInfo().Created)
+	if err1 != nil {
+		t1 = now
 	}
 
-	t2, _ := time.Parse(time.RFC3339Nano, c[j].ContainerInfo().Created)
-	if err != nil {
-		t1 = time.Now()
+	t2, err2 := time.Parse(time.RFC3339Nano, c[j].ContainerInfo().Created)
+	if err2 != nil {
+		t2 = now
 	}
 
 	return t1.Before(t2)

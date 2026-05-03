@@ -21,6 +21,12 @@ type TestData struct {
 	NameOfContainerToKeep   string
 	Containers              []t.Container
 	Staleness               map[string]bool
+	// StartContainerError, if non-nil, is returned by MockClient.StartContainer to
+	// drive the rollback branch in actions.restartStaleContainer.
+	StartContainerError error
+	// RollbackImage records the imageID argument passed to StartContainerWithImage.
+	// It stays empty until a rollback fires.
+	RollbackImage string
 }
 
 // TriedToRemoveImage is a test helper function to check whether RemoveImageByID has been called
@@ -52,12 +58,19 @@ func (client MockClient) StopContainer(c t.Container, _ time.Duration) error {
 
 // StartContainer is a mock method
 func (client MockClient) StartContainer(_ t.Container) (t.ContainerID, error) {
+	if client.TestData != nil && client.TestData.StartContainerError != nil {
+		return "", client.TestData.StartContainerError
+	}
 	return "", nil
 }
 
-// StartContainerWithImage is a mock method
-func (client MockClient) StartContainerWithImage(c t.Container, _ string) (t.ContainerID, error) {
-	return client.StartContainer(c)
+// StartContainerWithImage is a mock method. It records the imageID it was called
+// with so tests can assert what was passed to the rollback path.
+func (client MockClient) StartContainerWithImage(_ t.Container, imageID string) (t.ContainerID, error) {
+	if client.TestData != nil {
+		client.TestData.RollbackImage = imageID
+	}
+	return "", nil
 }
 
 // RenameContainer is a mock method

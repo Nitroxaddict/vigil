@@ -83,12 +83,11 @@ func ExecutePreUpdateCommand(client container.Client, container types.Container)
 // ExecutePostUpdateCommand tries to run the post-update lifecycle hook for a single container.
 func ExecutePostUpdateCommand(client container.Client, newContainerID types.ContainerID) {
 	newContainer, err := client.GetContainer(newContainerID)
-	timeout := newContainer.PostUpdateTimeout()
-
 	if err != nil {
 		log.WithField("containerID", newContainerID.ShortID()).Error(err)
 		return
 	}
+	timeout := newContainer.PostUpdateTimeout()
 	clog := log.WithField("container", newContainer.Name())
 
 	command := newContainer.GetLifecyclePostUpdateCommand()

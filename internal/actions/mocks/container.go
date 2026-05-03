@@ -79,6 +79,34 @@ func CreateMockContainerWithDigest(id string, name string, image string, created
 	return c
 }
 
+// CreateMockContainerWithRuntimeImage builds a container whose runtime image
+// (ContainerJSONBase.Image, the resolved sha256 digest) differs from the
+// reference recorded in Config.Image (the tag the user actually wrote, e.g.
+// "linuxserver/sonarr:latest"). This is the real shape of any container that
+// has been started from a tagged image.
+func CreateMockContainerWithRuntimeImage(id, name, configImage, runtimeImage string, created time.Time) wt.Container {
+	content := types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			ID:      id,
+			Image:   runtimeImage,
+			Name:    name,
+			Created: created.String(),
+			HostConfig: &dockerContainer.HostConfig{
+				PortBindings: map[nat.Port][]nat.PortBinding{},
+			},
+		},
+		Config: &dockerContainer.Config{
+			Image:        configImage,
+			Labels:       make(map[string]string),
+			ExposedPorts: map[nat.Port]struct{}{},
+		},
+	}
+	return container.NewContainer(
+		&content,
+		CreateMockImageInfo(configImage),
+	)
+}
+
 // CreateMockContainerWithConfig creates a container substitute valid for testing
 func CreateMockContainerWithConfig(id string, name string, image string, running bool, restarting bool, created time.Time, config *dockerContainer.Config) wt.Container {
 	content := types.ContainerJSON{

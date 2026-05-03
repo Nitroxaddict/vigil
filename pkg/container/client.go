@@ -217,12 +217,11 @@ func (client dockerClient) StopContainer(c t.Container, timeout time.Duration) e
 		}
 	}
 
-	// Wait for container to be removed. In this case an error is a good thing
-	if err := client.waitForStopOrTimeout(c, timeout); err == nil {
-		return fmt.Errorf("container %s (%s) could not be removed", c.Name(), shortID)
-	}
-
-	return nil
+	// Wait for the container to actually disappear from the daemon (a 404 on
+	// inspect). Force-remove returns before GC fully completes, so a brief
+	// "still inspectable but being deleted" window is normal and must not be
+	// treated as a hard failure.
+	return client.waitForContainerRemoval(c, timeout)
 }
 
 func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingConfig {
@@ -581,6 +580,33 @@ func (client dockerClient) waitForStopOrTimeout(c t.Container, waitTime time.Dur
 				return err
 			} else if !ci.State.Running {
 				return nil
+			}
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+// waitForContainerRemoval polls ContainerInspect and returns nil only when
+// the daemon reports the container as not found. A stopped-but-still-inspectable
+// container is a normal post-remove transient state and must not be treated as
+// success or failure — keep polling. Non-404 inspect errors (e.g. transient
+// network failures) bubble up immediately. Returns an error on timeout if the
+// container is still inspectable.
+func (client dockerClient) waitForContainerRemoval(c t.Container, waitTime time.Duration) error {
+	bg := context.Background()
+	timeout := time.After(waitTime)
+
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("container %s (%s) could not be removed", c.Name(), c.ID().ShortID())
+		default:
+			_, err := client.api.ContainerInspect(bg, string(c.ID()))
+			if sdkClient.IsErrNotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return err
 			}
 		}
 		time.Sleep(1 * time.Second)

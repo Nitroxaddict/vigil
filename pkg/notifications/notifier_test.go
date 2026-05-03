@@ -348,6 +348,79 @@ var _ = Describe("notifications", func() {
 
 				testURL(args, expectedOutput, expectedDelay)
 			})
+
+			When("the tls-skip-verify flag is set", func() {
+				// Regression: ATL-34. The flag previously forced SMTP to plaintext
+				// by setting Encryption=None and clearing UseStartTLS. The fix
+				// keeps encryption on regardless of the flag (shoutrrr v0.8 has no
+				// real InsecureSkipVerify knob for SMTP); the URL must therefore
+				// be byte-identical to the unset case.
+				fromAddress := "sender@example.com"
+				toAddress := "receiver@example.com"
+				baseArgs := []string{
+					"--notifications", "email",
+					"--notification-email-from", fromAddress,
+					"--notification-email-to", toAddress,
+					"--notification-email-server-user", "containrrrbot",
+					"--notification-email-server-password", "secret-password",
+					"--notification-email-server", "mail.containrrr.dev",
+				}
+				expectedOutput := buildExpectedURL("containrrrbot", "secret-password", "mail.containrrr.dev", 25, fromAddress, toAddress, "Plain")
+
+				It("should not downgrade encryption to plaintext", func() {
+					args := append([]string{}, baseArgs...)
+					args = append(args, "--notification-email-server-tls-skip-verify")
+
+					command := cmd.NewRootCommand()
+					flags.RegisterNotificationFlags(command)
+					Expect(command.ParseFlags(args)).To(Succeed())
+
+					urls, _ := notifications.AppendLegacyUrls([]string{}, command)
+					Expect(urls).To(HaveLen(1))
+					built := urls[0]
+
+					Expect(built).NotTo(ContainSubstring("encryption=None"))
+					Expect(built).NotTo(ContainSubstring("usestarttls=No"))
+					Expect(built).To(Equal(expectedOutput))
+				})
+			})
+		})
+	})
+
+	Describe("the gotify notifier with tls-skip-verify", func() {
+		// Regression: ATL-34. The flag was previously a no-op (captured into
+		// the struct but never wired anywhere). It still cannot be honored for
+		// https:// URLs through shoutrrr v0.8, but we must at least not silently
+		// rewrite the user's URL scheme. The user-visible result is that the
+		// produced shoutrrr URL preserves the input scheme and a warning is
+		// logged at startup.
+		token := "aaa"
+		host := "shoutrrr.local"
+
+		It("should keep the https scheme when the flag is set", func() {
+			expectedOutput := fmt.Sprintf("gotify://%s/%s?title=", host, token)
+
+			args := []string{
+				"--notifications", "gotify",
+				"--notification-gotify-url", fmt.Sprintf("https://%s", host),
+				"--notification-gotify-token", token,
+				"--notification-gotify-tls-skip-verify",
+			}
+
+			testURL(args, expectedOutput, time.Duration(0))
+		})
+
+		It("should keep the http scheme (DisableTLS) when the flag is set with http://", func() {
+			expectedOutput := fmt.Sprintf("gotify://%s/%s?disabletls=Yes&title=", host, token)
+
+			args := []string{
+				"--notifications", "gotify",
+				"--notification-gotify-url", fmt.Sprintf("http://%s", host),
+				"--notification-gotify-token", token,
+				"--notification-gotify-tls-skip-verify",
+			}
+
+			testURL(args, expectedOutput, time.Duration(0))
 		})
 	})
 })
