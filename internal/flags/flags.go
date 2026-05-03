@@ -96,7 +96,7 @@ func RegisterSystemFlags(rootCmd *cobra.Command) {
 	flags.StringP(
 		"log-format",
 		"l",
-		viper.GetString("WATCHTOWER_LOG_FORMAT"),
+		envString("WATCHTOWER_LOG_FORMAT"),
 		"Sets what logging format to use for console output. Possible values: Auto, LogFmt, Pretty, JSON")
 
 	flags.BoolP(

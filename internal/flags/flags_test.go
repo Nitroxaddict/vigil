@@ -275,3 +275,27 @@ func TestProcessFlagAliasesInvalidPorcelaineVersion(t *testing.T) {
 	})
 }
 
+// TestLogFormatFlagFromVigilEnvironment verifies that the VIGIL_LOG_FORMAT
+// alias is honored as the default for --log-format, mirroring every other
+// VIGIL_* env var. Must remain the LAST test in this file: the call chain
+// reads VIGIL_LOG_FORMAT via bindEnvWithFallback, which calls
+// viper.Set("WATCHTOWER_LOG_FORMAT", ...) on the global viper instance, and
+// this package has no viper.Reset between tests. Inserting another test
+// after this one would inherit "JSON" as the default and likely break.
+func TestLogFormatFlagFromVigilEnvironment(t *testing.T) {
+	cmd := new(cobra.Command)
+
+	t.Setenv("VIGIL_LOG_FORMAT", "JSON")
+
+	SetDefaults()
+	RegisterDockerFlags(cmd)
+	RegisterSystemFlags(cmd)
+	RegisterNotificationFlags(cmd)
+
+	require.NoError(t, cmd.ParseFlags([]string{}))
+	assert.Equal(t, "JSON", cmd.Flags().Lookup("log-format").Value.String())
+
+	require.NoError(t, SetupLogging(cmd.Flags()))
+	assert.IsType(t, &logrus.JSONFormatter{}, logrus.StandardLogger().Formatter)
+}
+
