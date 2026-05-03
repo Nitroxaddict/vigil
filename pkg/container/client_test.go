@@ -106,6 +106,31 @@ var _ = Describe("the client", func() {
 				Expect(dockerClient{api: docker}.StopContainer(container, time.Minute)).To(Succeed())
 			})
 		})
+		When("the container is briefly still inspectable after a successful remove", func() {
+			// Regression test: ContainerRemove(Force) returns before GC fully
+			// completes, so a "stopped-but-not-yet-GC'd" inspect is normal and
+			// must not be reported as a failure. Pre-fix, the second
+			// waitForStopOrTimeout call returned nil on Running=false and the
+			// caller treated nil as "could not be removed".
+			It("should keep polling until the inspect 404s", func() {
+				container := MockContainer(WithContainerState(types.ContainerState{Running: true}))
+				containerStopped := MockContainer(WithContainerState(types.ContainerState{Running: false}))
+
+				cid := container.ContainerInfo().ID
+				mockServer.AppendHandlers(
+					mocks.KillContainerHandler(cid, mocks.Found),
+					mocks.GetContainerHandler(cid, containerStopped.ContainerInfo()),
+					mocks.RemoveContainerHandler(cid, mocks.Found),
+					// First post-remove inspect: still inspectable, Running=false.
+					// Pre-fix path returned nil here → false-positive error.
+					mocks.GetContainerHandler(cid, containerStopped.ContainerInfo()),
+					// Second post-remove inspect: 404, the real signal of removal.
+					mocks.GetContainerHandler(cid, nil),
+				)
+
+				Expect(dockerClient{api: docker}.StopContainer(container, time.Minute)).To(Succeed())
+			})
+		})
 	})
 	When("removing a image", func() {
 		When("debug logging is enabled", func() {
