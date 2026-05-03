@@ -316,51 +316,89 @@ func writeStartupMessage(c *cobra.Command, sched time.Time, filtering string) {
 	}
 }
 
+// scheduleTickInterval is how often the schedule loop wakes up to compare the
+// wall clock against the next scheduled run. It bounds how late a fire can be
+// after wake from host sleep / Docker VM pause; daily-cadence schedules don't
+// need finer resolution.
+const scheduleTickInterval = 30 * time.Second
+
 func runUpgradesOnSchedule(c *cobra.Command, filter t.Filter, filtering string, lock chan bool) error {
 	if lock == nil {
 		lock = make(chan bool, 1)
 		lock <- true
 	}
 
-	scheduler := cron.New()
-	err := scheduler.AddFunc(
-		scheduleSpec,
-		func() {
-			select {
-			case v := <-lock:
-				defer func() { lock <- v }()
-				metric := runUpdatesWithNotifications(filter)
-				metrics.RegisterScan(metric)
-			default:
-				// Update was skipped
-				metrics.RegisterScan(nil)
-				log.Debug("Skipped another update already running.")
-			}
-
-			nextRuns := scheduler.Entries()
-			if len(nextRuns) > 0 {
-				log.Debug("Scheduled next run: " + nextRuns[0].Next.String())
-			}
-		})
-
+	schedule, err := cron.Parse(scheduleSpec)
 	if err != nil {
 		return err
 	}
 
-	writeStartupMessage(c, scheduler.Entries()[0].Schedule.Next(time.Now()), filtering)
+	firstRun := schedule.Next(time.Now())
+	writeStartupMessage(c, firstRun, filtering)
 
-	scheduler.Start()
+	fire := func(now time.Time) {
+		select {
+		case v := <-lock:
+			defer func() { lock <- v }()
+			metric := runUpdatesWithNotifications(filter)
+			metrics.RegisterScan(metric)
+		default:
+			// Update was skipped
+			metrics.RegisterScan(nil)
+			log.Debug("Skipped another update already running.")
+		}
+		log.Debug("Scheduled next run: " + schedule.Next(now).String())
+	}
 
 	// Graceful shut-down on SIGINT/SIGTERM
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	signal.Notify(interrupt, syscall.SIGTERM)
+	stop := make(chan struct{})
+	go func() {
+		<-interrupt
+		close(stop)
+	}()
 
-	<-interrupt
-	scheduler.Stop()
+	ticker := time.NewTicker(scheduleTickInterval)
+	defer ticker.Stop()
+
+	runScheduleLoop(schedule, firstRun, ticker.C, stop, fire)
+
 	log.Info("Waiting for running update to be finished...")
 	<-lock
 	return nil
+}
+
+// runScheduleLoop fires `fire` whenever a tick arrives at or after `next`.
+// Decisions are made on each tick's wall-clock value, never on monotonic time,
+// so the loop survives host sleep / Docker Desktop VM pause: when the runtime
+// resumes after missing one or more windows, the next tick sees now >= next,
+// fires once for the most recent missed window, then advances `next` to the
+// first future window per `schedule`. Multiple windows missed during a single
+// sleep collapse into a single fire — appropriate for a container updater
+// (pull latest now, do not replay history).
+func runScheduleLoop(
+	schedule cron.Schedule,
+	next time.Time,
+	tick <-chan time.Time,
+	stop <-chan struct{},
+	fire func(time.Time),
+) {
+	for {
+		select {
+		case now, ok := <-tick:
+			if !ok {
+				return
+			}
+			if !now.Before(next) {
+				fire(now)
+				next = schedule.Next(now)
+			}
+		case <-stop:
+			return
+		}
+	}
 }
 
 func runUpdatesWithNotifications(filter t.Filter) *metrics.Metric {
