@@ -60,7 +60,7 @@ func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 		Host:        e.Server,
 		Username:    e.User,
 		Password:    e.Password,
-		UseStartTLS: !e.tlsSkipVerify,
+		UseStartTLS: true,
 		UseHTML:     false,
 		Encryption:  shoutrrrSmtp.EncMethods.Auto,
 		Auth:        shoutrrrSmtp.AuthTypes.None,
@@ -72,7 +72,9 @@ func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 	}
 
 	if e.tlsSkipVerify {
-		conf.Encryption = shoutrrrSmtp.EncMethods.None
+		LocalLog.Warn("--notification-email-server-tls-skip-verify is set but cannot be honored: " +
+			"shoutrrr v0.8 does not expose an InsecureSkipVerify knob for SMTP. " +
+			"Encryption remains enabled and the server certificate will still be verified.")
 	}
 
 	return conf.GetURL().String(), nil

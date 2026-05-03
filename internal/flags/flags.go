@@ -283,8 +283,10 @@ func RegisterNotificationFlags(rootCmd *cobra.Command) {
 		"notification-email-server-tls-skip-verify",
 		"",
 		envBool("WATCHTOWER_NOTIFICATION_EMAIL_SERVER_TLS_SKIP_VERIFY"),
-		`Controls whether watchtower verifies the SMTP server's certificate chain and host name.
-Should only be used for testing.`)
+		`Currently inert: shoutrrr v0.8 (the SMTP backend) does not expose an
+InsecureSkipVerify option, so this flag cannot disable certificate
+verification. Encryption (STARTTLS/Auto) is always preserved. A warning
+is logged at startup if this flag is set. See docs/notifications.md.`)
 
 	flags.StringP(
 		"notification-email-server-user",
@@ -362,8 +364,11 @@ Should only be used for testing.`)
 		"notification-gotify-tls-skip-verify",
 		"",
 		envBool("WATCHTOWER_NOTIFICATION_GOTIFY_TLS_SKIP_VERIFY"),
-		`Controls whether watchtower verifies the Gotify server's certificate chain and host name.
-Should only be used for testing.`)
+		`Currently inert for https:// Gotify URLs: shoutrrr v0.8 only exposes
+DisableTLS, which would also switch the URL to http://. A warning is
+logged at startup if this flag is set with an https:// URL. For an
+http:// URL the request is plaintext and shoutrrr already skips
+verification on HTTP→HTTPS redirects. See docs/notifications.md.`)
 
 	flags.String(
 		"notification-template",
