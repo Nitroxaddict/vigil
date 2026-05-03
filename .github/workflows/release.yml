@@ -13,15 +13,85 @@ on:
         required: true
         default: 'latest'
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: nitroxaddict/vigil
 
 jobs:
-  build-and-push:
+  auto-version:
+    # Patch-bump and tag every code-bearing merge to main.
+    # Skip dep-bot commits and skip-list-only diffs (.github/**, **/*.md, .gitignore).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Update go.mod/go.sum')
     runs-on: ubuntu-latest
-    # Skip if commit is from update-deps bot
-    if: "!contains(github.event.head_commit.message, 'Update go.mod/go.sum')"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Decide whether to bump
+        id: gate
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "event.before unavailable; comparing against HEAD~1"
+            BEFORE="$(git rev-parse HEAD~1)"
+          fi
+          CHANGED="$(git diff --name-only "$BEFORE" "${{ github.sha }}")"
+          echo "Changed files:"
+          echo "$CHANGED"
+          NON_SKIP="$(printf '%s\n' "$CHANGED" | grep -vE '^(\.github/|.*\.md$|\.gitignore$)' || true)"
+          if [[ -z "$NON_SKIP" ]]; then
+            echo "All changes match skip-list; no version bump."
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-skip-list changes detected:"
+            echo "$NON_SKIP"
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute next patch version
+        if: steps.gate.outputs.bump == 'true'
+        id: bump
+        run: |
+          set -euo pipefail
+          LATEST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n 1)"
+          if [[ -z "$LATEST_TAG" ]]; then
+            NEW_TAG="v0.0.1"
+          else
+            VERSION="${LATEST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "Latest tag: ${LATEST_TAG:-<none>}; new tag: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Tag and release
+        if: steps.gate.outputs.bump == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ steps.bump.outputs.new_tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"
+          gh release create "$NEW_TAG" --generate-notes
+
+  build-and-push:
+    # Build and publish images only on tag pushes (created by auto-version or manually) and on manual workflow_dispatch.
+    # The push:main path no longer builds an image directly; latest now moves only when a real release is cut.
+    if: (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch') && !contains(github.event.head_commit.message, 'Update go.mod/go.sum')
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
