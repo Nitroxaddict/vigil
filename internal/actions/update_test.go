@@ -1,6 +1,7 @@
 package actions_test
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Nitroxaddict/vigil/internal/actions"
@@ -476,5 +477,39 @@ var _ = Describe("the update action", func() {
 
 		})
 
+	})
+
+	When("a container fails to start with the new image", func() {
+		It("rolls back using the original image reference, not the runtime sha256 digest (ATL-33)", func() {
+			// Real-world shape: Config.Image holds the tag the user wrote;
+			// ContainerJSONBase.Image holds the resolved sha256 digest of the
+			// image the container was actually started from. Passing the digest
+			// to StartContainerWithImage poisons the new container's Config.Image
+			// and PullImage rejects it on the next cycle as a pinned image.
+			const configImage = "linuxserver/sonarr:latest"
+			const runtimeImage = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+			testData := &TestData{
+				Containers: []types.Container{
+					CreateMockContainerWithRuntimeImage(
+						"test-container-rollback",
+						"test-container-rollback",
+						configImage,
+						runtimeImage,
+						time.Now().AddDate(0, 0, -1),
+					),
+				},
+				StartContainerError: errors.New("simulated failure to start with new image"),
+			}
+			client := CreateMockClient(testData, false, false)
+
+			_, err := actions.Update(client, types.UpdateParams{})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(client.TestData.RollbackImage).To(Equal(configImage),
+				"rollback must pass the original image reference, not a sha256 digest")
+			Expect(client.TestData.RollbackImage).NotTo(HavePrefix("sha256:"),
+				"sha256 prefix would trip the pinned-image guard in PullImage")
+		})
 	})
 })
