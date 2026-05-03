@@ -67,3 +67,21 @@ func TestByCreatedWellFormedTimestampsSortAscending(t *testing.T) {
 			cs[0].ContainerInfo().ID, cs[1].ContainerInfo().ID)
 	}
 }
+
+// Both-malformed is the case the single `now := time.Now()` capture in
+// Less exists for. Pre-capture, t1 and t2 each got their own time.Now()
+// (with t1's call microseconds before t2's), so t1.Before(t2) was always
+// true — Less became non-deterministic across pair comparisons during
+// sort.Sort, violating the strict-weak-ordering contract. Existing
+// internal/actions tests use time.Time.String() (not RFC3339Nano) for
+// mock containers, so this is the realistic hot path, not an edge case.
+func TestByCreatedBothMalformedTimestampsAreNotStrictlyOrdered(t *testing.T) {
+	a := makeContainer("a", "not-a-timestamp")
+	b := makeContainer("b", "also-not-a-timestamp")
+	cs := sorter.ByCreated{a, b}
+
+	if cs.Less(0, 1) || cs.Less(1, 0) {
+		t.Fatalf("Less must return false both ways when both timestamps are malformed; got Less(0,1)=%v Less(1,0)=%v",
+			cs.Less(0, 1), cs.Less(1, 0))
+	}
+}
