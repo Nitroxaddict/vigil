@@ -66,6 +66,13 @@ func (n *gotifyTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 		return "", err
 	}
 
+	if n.gotifyInsecureSkipVerify && apiURL.Scheme == "https" {
+		LocalLog.Warn("--notification-gotify-tls-skip-verify is set but cannot be honored for an https:// Gotify URL: " +
+			"shoutrrr v0.8 only exposes DisableTLS, which would also switch the URL to http://. " +
+			"Either install a trusted certificate on the Gotify server, or set the URL to http:// " +
+			"if you accept sending notifications in plaintext.")
+	}
+
 	config := &shoutrrrGotify.Config{
 		Host:       apiURL.Host,
 		Path:       apiURL.Path,
