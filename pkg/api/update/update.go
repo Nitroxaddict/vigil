@@ -1,9 +1,7 @@
 package update
 
 import (
-	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -38,13 +36,6 @@ type Handler struct {
 func (handle *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	log.Info("Updates triggered by HTTP API request.")
 
-	// Limit request body to 1MB to prevent DoS via oversized payloads
-	_, err := io.Copy(os.Stdout, io.LimitReader(r.Body, 1<<20))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	var images []string
 	imageQueries, found := r.URL.Query()["image"]
 	if found {
@@ -56,18 +47,14 @@ func (handle *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		images = nil
 	}
 
-	if len(images) > 0 {
-		chanValue := <-lock
+	select {
+	case chanValue := <-lock:
 		defer func() { lock <- chanValue }()
 		handle.fn(images)
-	} else {
-		select {
-		case chanValue := <-lock:
-			defer func() { lock <- chanValue }()
-			handle.fn(images)
-		default:
-			log.Debug("Skipped. Another update already running.")
-		}
+	default:
+		log.Debug("Skipped. Another update already running.")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte(`{"error":"update already running"}`))
 	}
-
 }
