@@ -512,4 +512,46 @@ var _ = Describe("the update action", func() {
 				"sha256 prefix would trip the pinned-image guard in PullImage")
 		})
 	})
+
+	When("a rollback fires during the update loop (ATL-40 / S9)", func() {
+		// Guards the errRolledBack cleanup-skip behaviour: when the start of the
+		// new image fails and the container is rolled back to its previous image,
+		// the previous image is still in use and must NOT be passed to cleanupImages.
+		// Asserts TriedToRemoveImageCount == 0 even when params.Cleanup is true.
+		const configImage = "linuxserver/sonarr:latest"
+		const runtimeImage = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+		rollbackTestData := func() *TestData {
+			return &TestData{
+				Containers: []types.Container{
+					CreateMockContainerWithRuntimeImage(
+						"test-container-rollback",
+						"test-container-rollback",
+						configImage,
+						runtimeImage,
+						time.Now().AddDate(0, 0, -1),
+					),
+				},
+				StartContainerError: errors.New("simulated failure to start with new image"),
+			}
+		}
+
+		It("does not clean up the rolled-back image on the batch-restart path", func() {
+			client := CreateMockClient(rollbackTestData(), false, false)
+			_, err := actions.Update(client, types.UpdateParams{Cleanup: true})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.TestData.RollbackImage).To(Equal(configImage))
+			Expect(client.TestData.TriedToRemoveImageCount).To(Equal(0),
+				"image cleanup must be skipped when the container was rolled back — the old image is still in use")
+		})
+
+		It("does not clean up the rolled-back image on the rolling-restart path", func() {
+			client := CreateMockClient(rollbackTestData(), false, false)
+			_, err := actions.Update(client, types.UpdateParams{Cleanup: true, RollingRestart: true})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.TestData.RollbackImage).To(Equal(configImage))
+			Expect(client.TestData.TriedToRemoveImageCount).To(Equal(0),
+				"image cleanup must be skipped when the container was rolled back — the old image is still in use")
+		})
+	})
 })

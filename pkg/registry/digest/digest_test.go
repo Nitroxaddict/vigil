@@ -1,6 +1,8 @@
 package digest_test
 
 import (
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"github.com/Nitroxaddict/vigil/internal/actions/mocks"
 	"github.com/Nitroxaddict/vigil/internal/meta"
@@ -121,6 +123,58 @@ var _ = Describe("Digests", func() {
 			Expect(server.ReceivedRequests()).Should(HaveLen(1))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(dig).To(Equal(mockDigest))
+		})
+	})
+
+	When("the registry presents an untrusted TLS cert (ATL-40 / S10)", func() {
+		// Guards against any future change that re-introduces InsecureSkipVerify
+		// on the digest HTTP transport. A self-signed cert from ghttp.NewTLSServer
+		// must surface an x509.UnknownAuthorityError rather than being silently accepted.
+		var tlsServer *ghttp.Server
+		BeforeEach(func() {
+			tlsServer = ghttp.NewTLSServer()
+			tlsServer.AppendHandlers(
+				ghttp.RespondWith(http.StatusOK, "", http.Header{
+					digest.ContentDigestHeader: []string{mockDigest},
+				}),
+			)
+		})
+		AfterEach(func() {
+			tlsServer.Close()
+		})
+		It("should refuse to call the registry and surface an unknown-authority error", func() {
+			_, err := digest.GetDigest(tlsServer.URL(), "token")
+			Expect(err).To(HaveOccurred())
+
+			var unknownAuthority x509.UnknownAuthorityError
+			Expect(errors.As(err, &unknownAuthority)).To(BeTrue(),
+				"expected error chain to contain x509.UnknownAuthorityError, got: %v", err)
+			// The handler must not have been reached — the TLS handshake fails first.
+			Expect(tlsServer.ReceivedRequests()).Should(BeEmpty())
+		})
+	})
+
+	When("the registry is reachable over plain HTTP", func() {
+		// Control spec for the TLS-verify test above: confirms GetDigest still
+		// completes against an untrusted/insecure transport, so a failure on the
+		// TLS spec above is unambiguously about cert verification.
+		var server *ghttp.Server
+		BeforeEach(func() {
+			server = ghttp.NewServer()
+			server.AppendHandlers(
+				ghttp.RespondWith(http.StatusOK, "", http.Header{
+					digest.ContentDigestHeader: []string{mockDigest},
+				}),
+			)
+		})
+		AfterEach(func() {
+			server.Close()
+		})
+		It("should return the digest header without TLS errors", func() {
+			dig, err := digest.GetDigest(server.URL(), "token")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(dig).To(Equal(mockDigest))
+			Expect(server.ReceivedRequests()).Should(HaveLen(1))
 		})
 	})
 })
