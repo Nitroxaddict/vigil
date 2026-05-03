@@ -233,9 +233,14 @@ func restartStaleContainer(container types.Container, client container.Client, p
 	if !params.NoRestart {
 		if newContainerID, err := client.StartContainer(container); err != nil {
 			log.Errorf("Failed to start %s with new image: %s", container.Name(), err)
-			oldImageID := container.ContainerInfo().Image
-			log.Infof("Rolling back %s to previous image %s", container.Name(), types.ImageID(oldImageID).ShortID())
-			if _, rollbackErr := client.StartContainerWithImage(container, oldImageID); rollbackErr != nil {
+			// Use the original image reference (e.g. "linuxserver/sonarr:latest"), not
+			// container.ContainerInfo().Image (which is the resolved sha256 digest).
+			// Passing a digest here would write it into Config.Image of the recreated
+			// container, and PullImage would then reject it as a pinned image on the
+			// next update cycle, silently disabling future updates.
+			rollbackImage := container.ImageName()
+			log.Infof("Rolling back %s to previous image %s", container.Name(), rollbackImage)
+			if _, rollbackErr := client.StartContainerWithImage(container, rollbackImage); rollbackErr != nil {
 				log.Errorf("Rollback of %s also failed: %s", container.Name(), rollbackErr)
 				return err
 			}
