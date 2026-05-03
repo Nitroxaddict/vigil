@@ -159,13 +159,9 @@ func Run(c *cobra.Command, names []string) {
 		os.Exit(0)
 	}
 
-	if !batchRestart && monitorOnly {
-		log.Fatal("Rolling restarts is not compatible with the global monitor only flag")
-	}
-
 	awaitDockerClient()
 
-	if err := actions.CheckForSanity(client, filter, !batchRestart); err != nil {
+	if err := actions.CheckForSanity(client, filter, !batchRestart && !monitorOnly); err != nil {
 		logNotifyExit(err)
 	}
 
