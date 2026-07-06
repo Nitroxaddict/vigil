@@ -123,6 +123,7 @@ jobs:
         id: version
         env:
           AUTO_TAG: ${{ needs.auto-version.outputs.new_tag }}
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [[ -n "$AUTO_TAG" ]]; then
             echo "version=$AUTO_TAG" >> $GITHUB_OUTPUT
@@ -130,6 +131,9 @@ jobs:
           elif [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
+          elif [[ -n "$DISPATCH_TAG" && "$DISPATCH_TAG" != "latest" ]]; then
+            echo "version=$(git describe --tags --always)" >> $GITHUB_OUTPUT
+            echo "tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${DISPATCH_TAG}" >> $GITHUB_OUTPUT
           else
             echo "version=$(git describe --tags --always)" >> $GITHUB_OUTPUT
             echo "tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
