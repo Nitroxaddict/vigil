@@ -39,6 +39,8 @@ docker run --detach \
     ghcr.io/nitroxaddict/vigil
 ```
 
+The `:latest` tag is a multi-arch manifest list — Docker pulls the right binary for your host (`amd64` or `arm64`) automatically. No platform flag needed on Apple Silicon, Raspberry Pi, or x86 Linux.
+
 ## Migration from Watchtower
 
 1. Stop your Watchtower container
