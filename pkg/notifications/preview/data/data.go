@@ -11,31 +11,33 @@ import (
 )
 
 type previewData struct {
+	staticData     // embedded: promotes Title, Host, Time to template scope
 	rand           *rand.Rand
 	lastTime       time.Time
 	report         *report
 	containerCount int
 	Entries        []*logEntry
-	StaticData     staticData
 }
 
 type staticData struct {
 	Title string
 	Host  string
+	Time  time.Time
 }
 
 // New initializes a new preview data struct
 func New() *previewData {
 	return &previewData{
+		staticData: staticData{
+			Title: "Title",
+			Host:  "Host",
+			Time:  time.Now(),
+		},
 		rand:           rand.New(rand.NewSource(1)),
 		lastTime:       time.Now().Add(-30 * time.Minute),
 		report:         nil,
 		containerCount: 0,
 		Entries:        []*logEntry{},
-		StaticData: staticData{
-			Title: "Title",
-			Host:  "Host",
-		},
 	}
 }
 

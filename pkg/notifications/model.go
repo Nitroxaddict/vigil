@@ -1,6 +1,8 @@
 package notifications
 
 import (
+	"time"
+
 	t "github.com/Nitroxaddict/vigil/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -9,6 +11,7 @@ import (
 type StaticData struct {
 	Title string
 	Host  string
+	Time  time.Time
 }
 
 // Data is the notification template data model

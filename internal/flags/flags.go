@@ -384,6 +384,11 @@ verification on HTTP→HTTPS redirects.`)
 		envBool("WATCHTOWER_NOTIFICATION_REPORT"),
 		"Use the session report as the notification template data")
 
+	flags.Bool(
+		"notification-email-plaintext",
+		envBool("WATCHTOWER_NOTIFICATION_EMAIL_PLAINTEXT"),
+		"Use plain-text email format (email-text) instead of HTML (email-html) when email is the sole notifier")
+
 	flags.StringP(
 		"notification-title-tag",
 		"",
@@ -634,6 +639,25 @@ func ProcessFlagAliases(flags *pflag.FlagSet) {
 		setFlagIfDefault(flags, `notification-report`, `true`)
 		tpl := fmt.Sprintf(`porcelain.%s.summary-no-log`, porcelain)
 		setFlagIfDefault(flags, `notification-template`, tpl)
+	}
+
+	// Auto-default to email-html (or email-text) when the legacy email notifier
+	// is the *sole* configured notifier and no shoutrrr notification-url entries
+	// are present. This is the only path where it is safe to switch the shared
+	// template to an HTML-specific one without leaking raw HTML into other
+	// services (Slack, Gotify, …).
+	notifTypes, _ := flags.GetStringSlice("notifications")
+	notifURLs, _ := flags.GetStringArray("notification-url")
+	if len(notifTypes) == 1 && notifTypes[0] == "email" && len(notifURLs) == 0 {
+		// notification-report must be true so that .Report/.Time are populated;
+		// legacy-template mode passes only []*log.Entry and would crash.
+		setFlagIfDefault(flags, "notification-report", "true")
+		plaintext, _ := flags.GetBool("notification-email-plaintext")
+		if plaintext {
+			setFlagIfDefault(flags, "notification-template", "email-text")
+		} else {
+			setFlagIfDefault(flags, "notification-template", "email-html")
+		}
 	}
 
 	scheduleChanged := flags.Changed(`schedule`)
