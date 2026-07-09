@@ -104,12 +104,12 @@ func (client MockClient) ExecuteCommand(_ t.ContainerID, command string, _ int) 
 }
 
 // IsContainerStale is true if not explicitly stated in TestData for the mock client
-func (client MockClient) IsContainerStale(cont t.Container, params t.UpdateParams) (bool, t.ImageID, error) {
+func (client MockClient) IsContainerStale(cont t.Container, params t.UpdateParams) (bool, t.ImageID, map[string]string, error) {
 	stale, found := client.TestData.Staleness[cont.Name()]
 	if !found {
 		stale = true
 	}
-	return stale, "", nil
+	return stale, "", nil, nil
 }
 
 // WarnOnHeadPullFailed is always true for the mock client

@@ -138,6 +138,7 @@ func GetTemplateData(c *cobra.Command) StaticData {
 	return StaticData{
 		Host:  hostname,
 		Title: title,
+		Time:  time.Now(),
 	}
 }
 

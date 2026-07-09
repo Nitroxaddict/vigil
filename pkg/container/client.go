@@ -31,7 +31,7 @@ type Client interface {
 	StartContainer(t.Container) (t.ContainerID, error)
 	StartContainerWithImage(t.Container, string) (t.ContainerID, error)
 	RenameContainer(t.Container, string) error
-	IsContainerStale(t.Container, t.UpdateParams) (stale bool, latestImage t.ImageID, err error)
+	IsContainerStale(t.Container, t.UpdateParams) (stale bool, latestImage t.ImageID, latestLabels map[string]string, err error)
 	ExecuteCommand(containerID t.ContainerID, command string, timeout int) (SkipUpdate bool, err error)
 	RemoveImageByID(t.ImageID) error
 	WarnOnHeadPullFailed(container t.Container) bool
@@ -345,35 +345,40 @@ func (client dockerClient) RenameContainer(c t.Container, newName string) error 
 	return client.api.ContainerRename(bg, string(c.ID()), newName)
 }
 
-func (client dockerClient) IsContainerStale(container t.Container, params t.UpdateParams) (stale bool, latestImage t.ImageID, err error) {
+func (client dockerClient) IsContainerStale(container t.Container, params t.UpdateParams) (stale bool, latestImage t.ImageID, latestLabels map[string]string, err error) {
 	ctx := context.Background()
 
 	if container.IsNoPull(params) {
 		log.Debugf("Skipping image pull.")
 	} else if err := client.PullImage(ctx, container); err != nil {
-		return false, container.SafeImageID(), err
+		return false, container.SafeImageID(), nil, err
 	}
 
 	return client.HasNewImage(ctx, container)
 }
 
-func (client dockerClient) HasNewImage(ctx context.Context, container t.Container) (hasNew bool, latestImage t.ImageID, err error) {
+func (client dockerClient) HasNewImage(ctx context.Context, container t.Container) (hasNew bool, latestImage t.ImageID, latestLabels map[string]string, err error) {
 	currentImageID := t.ImageID(container.ContainerInfo().ContainerJSONBase.Image)
 	imageName := container.ImageName()
 
 	newImageInfo, _, err := client.api.ImageInspectWithRaw(ctx, imageName)
 	if err != nil {
-		return false, currentImageID, err
+		return false, currentImageID, nil, err
 	}
 
 	newImageID := t.ImageID(newImageInfo.ID)
 	if newImageID == currentImageID {
 		log.Debugf("No new images found for %s", container.Name())
-		return false, currentImageID, nil
+		return false, currentImageID, nil, nil
+	}
+
+	var labels map[string]string
+	if newImageInfo.Config != nil {
+		labels = newImageInfo.Config.Labels
 	}
 
 	log.Infof("Found new %s image (%s)", imageName, newImageID.ShortID())
-	return true, newImageID, nil
+	return true, newImageID, labels, nil
 }
 
 // PullImage pulls the latest image for the supplied container, optionally skipping if it's digest can be confirmed
