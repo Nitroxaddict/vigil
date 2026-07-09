@@ -52,6 +52,12 @@ func newEmailNotifier(c *cobra.Command) t.ConvertibleNotifier {
 }
 
 func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
+	// UseHTML derives from the resolved notification-template flag so that an
+	// explicit --notification-template=email-text override is respected even
+	// when the auto-default would have chosen email-html.
+	resolvedTemplate, _ := c.Flags().GetString("notification-template")
+	useHTML := resolvedTemplate == "email-html"
+
 	conf := &shoutrrrSmtp.Config{
 		FromAddress: e.From,
 		FromName:    meta.Name,
@@ -61,7 +67,7 @@ func (e *emailTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 		Username:    e.User,
 		Password:    e.Password,
 		UseStartTLS: true,
-		UseHTML:     false,
+		UseHTML:     useHTML,
 		Encryption:  shoutrrrSmtp.EncMethods.Auto,
 		Auth:        shoutrrrSmtp.AuthTypes.None,
 		ClientHost:  "localhost",

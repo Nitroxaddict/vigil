@@ -2,6 +2,8 @@ package notifications
 
 import (
 	"bytes"
+	"fmt"
+	htmltemplate "html/template"
 	stdlog "log"
 	"os"
 	"strings"
@@ -33,6 +35,7 @@ type shoutrrrTypeNotifier struct {
 	entries        []*log.Entry
 	logLevel       log.Level
 	template       *template.Template
+	htmlTemplate   *htmltemplate.Template // non-nil only for the email-html template
 	messages       chan string
 	done           chan bool
 	legacyTemplate bool
@@ -78,9 +81,22 @@ func (n *shoutrrrTypeNotifier) AddLogHook() {
 }
 
 func createNotifier(urls []string, level log.Level, tplString string, legacy bool, data StaticData, stdout bool, delay time.Duration) *shoutrrrTypeNotifier {
-	tpl, err := getShoutrrrTemplate(tplString, legacy)
-	if err != nil {
-		log.Errorf("Could not use configured notification template: %s. Using default template", err)
+	var tpl *template.Template
+	var htmlTpl *htmltemplate.Template
+
+	if tplString == "email-html" {
+		var err error
+		htmlTpl, err = getShoutrrrHTMLTemplate()
+		if err != nil {
+			log.Errorf("Could not parse email-html template: %s. Falling back to default template", err)
+			tpl, _ = getShoutrrrTemplate("", legacy)
+		}
+	} else {
+		var err error
+		tpl, err = getShoutrrrTemplate(tplString, legacy)
+		if err != nil {
+			log.Errorf("Could not use configured notification template: %s. Using default template", err)
+		}
 	}
 
 	var logger types.StdLogger
@@ -106,6 +122,7 @@ func createNotifier(urls []string, level log.Level, tplString string, legacy boo
 		done:           make(chan bool),
 		logLevel:       level,
 		template:       tpl,
+		htmlTemplate:   htmlTpl,
 		legacyTemplate: legacy,
 		data:           data,
 		params:         params,
@@ -139,8 +156,14 @@ func (n *shoutrrrTypeNotifier) buildMessage(data Data) (string, error) {
 	if n.legacyTemplate {
 		templateData = data.Entries
 	}
-	if err := n.template.Execute(&body, templateData); err != nil {
-		return "", err
+	if n.htmlTemplate != nil {
+		if err := n.htmlTemplate.Execute(&body, templateData); err != nil {
+			return "", err
+		}
+	} else {
+		if err := n.template.Execute(&body, templateData); err != nil {
+			return "", err
+		}
 	}
 
 	return body.String(), nil
@@ -235,4 +258,17 @@ func getShoutrrrTemplate(tplString string, legacy bool) (tpl *template.Template,
 	}
 
 	return
+}
+
+// getShoutrrrHTMLTemplate parses the email-html common template using
+// html/template so that all container-metadata values are context-aware
+// HTML-escaped before being written into the message body.
+func getShoutrrrHTMLTemplate() (*htmltemplate.Template, error) {
+	tplContent, ok := commonTemplates["email-html"]
+	if !ok {
+		return nil, fmt.Errorf("email-html template not found in common templates")
+	}
+	return htmltemplate.New("").
+		Funcs(htmltemplate.FuncMap(templates.Funcs)).
+		Parse(tplContent)
 }
