@@ -29,8 +29,8 @@ func (c errClient) StartContainerWithImage(_ t.Container, _ string) (t.Container
 	return "", nil
 }
 func (c errClient) RenameContainer(_ t.Container, _ string) error { return nil }
-func (c errClient) IsContainerStale(_ t.Container, _ t.UpdateParams) (bool, t.ImageID, error) {
-	return false, "", nil
+func (c errClient) IsContainerStale(_ t.Container, _ t.UpdateParams) (bool, t.ImageID, map[string]string, error) {
+	return false, "", nil, nil
 }
 func (c errClient) ExecuteCommand(_ t.ContainerID, _ string, _ int) (bool, error) {
 	return false, nil

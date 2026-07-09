@@ -28,6 +28,13 @@ func (u *containerStatus) LatestImageID() wt.ImageID {
 	return u.newImage
 }
 
+// LatestImageVersion returns the OCI version label for the latest image.
+// The preview data generator does not set version labels, so this always
+// returns "" (versionOrID will fall back to ShortID).
+func (u *containerStatus) LatestImageVersion() string {
+	return ""
+}
+
 func (u *containerStatus) ImageName() string {
 	return u.imageName
 }

@@ -8,27 +8,28 @@ import (
 type Progress map[types.ContainerID]*ContainerStatus
 
 // UpdateFromContainer sets various status fields from their corresponding container equivalents
-func UpdateFromContainer(cont types.Container, newImage types.ImageID, state State) *ContainerStatus {
+func UpdateFromContainer(cont types.Container, newImage types.ImageID, newImageLabels map[string]string, state State) *ContainerStatus {
 	return &ContainerStatus{
-		containerID:   cont.ID(),
-		containerName: cont.Name(),
-		imageName:     cont.ImageName(),
-		oldImage:      cont.SafeImageID(),
-		newImage:      newImage,
-		state:         state,
+		containerID:    cont.ID(),
+		containerName:  cont.Name(),
+		imageName:      cont.ImageName(),
+		oldImage:       cont.SafeImageID(),
+		newImage:       newImage,
+		newImageLabels: newImageLabels,
+		state:          state,
 	}
 }
 
 // AddSkipped adds a container to the Progress with the state set as skipped
 func (m Progress) AddSkipped(cont types.Container, err error) {
-	update := UpdateFromContainer(cont, cont.SafeImageID(), SkippedState)
+	update := UpdateFromContainer(cont, cont.SafeImageID(), nil, SkippedState)
 	update.error = err
 	m.Add(update)
 }
 
 // AddScanned adds a container to the Progress with the state set as scanned
-func (m Progress) AddScanned(cont types.Container, newImage types.ImageID) {
-	m.Add(UpdateFromContainer(cont, newImage, ScannedState))
+func (m Progress) AddScanned(cont types.Container, newImage types.ImageID, newImageLabels map[string]string) {
+	m.Add(UpdateFromContainer(cont, newImage, newImageLabels, ScannedState))
 }
 
 // UpdateFailed updates the containers passed, setting their state as failed with the supplied error

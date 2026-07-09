@@ -24,14 +24,14 @@ func CreateMockProgressReport(states ...session.State) wt.Report {
 			progress.AddSkipped(c, errors.New("unpossible"))
 		case session.FreshState:
 			c, _ := CreateContainerForProgress(index, 31, "frsh%d")
-			progress.AddScanned(c, c.ImageID())
+			progress.AddScanned(c, c.ImageID(), nil)
 		case session.UpdatedState:
 			c, newImage := CreateContainerForProgress(index, 11, "updt%d")
-			progress.AddScanned(c, newImage)
+			progress.AddScanned(c, newImage, nil)
 			progress.MarkForUpdate(c.ID())
 		case session.FailedState:
 			c, newImage := CreateContainerForProgress(index, 21, "fail%d")
-			progress.AddScanned(c, newImage)
+			progress.AddScanned(c, newImage, nil)
 			failed[c.ID()] = errors.New("accidentally the whole container")
 		}
 

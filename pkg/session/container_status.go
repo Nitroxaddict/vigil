@@ -1,6 +1,10 @@
 package session
 
-import wt "github.com/Nitroxaddict/vigil/pkg/types"
+import (
+	"strings"
+
+	wt "github.com/Nitroxaddict/vigil/pkg/types"
+)
 
 // State indicates what the current state is of the container
 type State int
@@ -17,15 +21,34 @@ const (
 	StaleState
 )
 
+// maxLabelLen is the maximum number of bytes returned for any OCI label value.
+const maxLabelLen = 64
+
 // ContainerStatus contains the container state during a session
 type ContainerStatus struct {
-	containerID   wt.ContainerID
-	oldImage      wt.ImageID
-	newImage      wt.ImageID
-	containerName string
-	imageName     string
+	containerID    wt.ContainerID
+	oldImage       wt.ImageID
+	newImage       wt.ImageID
+	newImageLabels map[string]string
+	containerName  string
+	imageName      string
 	error
 	state State
+}
+
+// sanitizeLabel truncates s to maxLabelLen bytes and strips ASCII control
+// characters (bytes < 0x20 and 0x7f). It is applied to every OCI label value
+// before it is exposed to template engines.
+func sanitizeLabel(s string) string {
+	if len(s) > maxLabelLen {
+		s = s[:maxLabelLen]
+	}
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return -1
+		}
+		return r
+	}, s)
 }
 
 // ID returns the container ID
@@ -46,6 +69,16 @@ func (u *ContainerStatus) CurrentImageID() wt.ImageID {
 // LatestImageID returns the newest image ID found during the session
 func (u *ContainerStatus) LatestImageID() wt.ImageID {
 	return u.newImage
+}
+
+// LatestImageVersion returns the value of the org.opencontainers.image.version
+// label from the newest image, sanitized and truncated. Returns "" when the
+// label is absent or the label map is nil.
+func (u *ContainerStatus) LatestImageVersion() string {
+	if u.newImageLabels == nil {
+		return ""
+	}
+	return sanitizeLabel(u.newImageLabels["org.opencontainers.image.version"])
 }
 
 // ImageName returns the name:tag that the container uses

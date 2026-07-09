@@ -17,6 +17,7 @@ type ContainerReport interface {
 	Name() string
 	CurrentImageID() ImageID
 	LatestImageID() ImageID
+	LatestImageVersion() string
 	ImageName() string
 	Error() string
 	State() string
