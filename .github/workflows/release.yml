@@ -23,7 +23,8 @@ env:
 
 jobs:
   auto-version:
-    # Patch-bump and tag every code-bearing merge to main.
+    # Semver-bump and tag every code-bearing merge to main; bump level (major/minor/patch)
+    # is derived from Conventional Commits found in the merge range.
     # Skip dep-bot commits and skip-list-only diffs (.github/**, **/*.md, .gitignore).
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Update go.mod/go.sum')
     runs-on: ubuntu-latest
@@ -47,6 +48,7 @@ jobs:
             echo "event.before unavailable; comparing against HEAD~1"
             BEFORE="$(git rev-parse HEAD~1)"
           fi
+          echo "before=$BEFORE" >> "$GITHUB_OUTPUT"
           CHANGED="$(git diff --name-only "$BEFORE" "${{ github.sha }}")"
           echo "Changed files:"
           echo "$CHANGED"
@@ -60,21 +62,76 @@ jobs:
             echo "bump=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Compute next patch version
+      - name: Compute next version
         if: steps.gate.outputs.bump == 'true'
         id: bump
         run: |
           set -euo pipefail
-          # Filter to strict vMAJOR.MINOR.PATCH only — pre-release / suffix tags would crash the patch math under -e.
+          BEFORE="${{ steps.gate.outputs.before }}"
+          RANGE="${BEFORE}..${{ github.sha }}"
+
+          SUBJECTS="$(git log --format='%s' "$RANGE")"
+          BODIES="$(git log --format='%B' "$RANGE")"
+
+          # Bump level: highest severity wins. Every match uses a here-string (<<<), never a
+          # pipe into `grep -q` — a `printf | grep -q` pipe can SIGPIPE under `set -o pipefail`
+          # when the input exceeds the OS pipe buffer (~64KB) and grep exits early on a match,
+          # which silently downgrades a real MAJOR/MINOR to PATCH. Here-strings have no producer
+          # process, so grep's own exit status passes through directly. Verified during plan
+          # review: 200KB input with an early match gave exit 141 (SIGPIPE) via the pipe form
+          # and exit 0 (correct) via the here-string form.
+          #
+          # NOTE: this scans every commit in the full merge range, not just the top-level
+          # squash/merge subject — a BREAKING CHANGE: footer or type!: prefix in ANY commit
+          # body reachable in this range (including intermediate phase-commit messages that
+          # get inlined into a squash commit's body by GitHub) forces a MAJOR bump. This is
+          # intentional (needed to correctly handle multi-commit direct/merge-commit pushes,
+          # not just squash merges) but means all commit bodies in a merged PR are load-bearing
+          # for the release version, not just the PR title. Do not narrow this to the top
+          # commit only — that would break multi-commit-range detection.
+          BUMP="patch"
+          if grep -qE '^(feat|fix|perf|refactor|build|chore|ci|docs|style|test|revert)(\([^)]*\))?!:' <<< "$SUBJECTS" \
+             || grep -qE '^BREAKING[ -]CHANGE:' <<< "$BODIES"; then
+            BUMP="major"
+            echo "::warning::MAJOR version bump detected in $RANGE — this is irreversible (future bumps always build off the highest existing tag)."
+          elif grep -qE '^feat(\([^)]*\))?:' <<< "$SUBJECTS"; then
+            BUMP="minor"
+          else
+            echo "::warning::No conventional-commit type (feat/fix/etc.) matched in $RANGE; defaulting to PATCH bump."
+          fi
+          echo "Bump level: $BUMP"
+
+          # Filter to strict vMAJOR.MINOR.PATCH only — pre-release / suffix tags would crash
+          # the patch math under -e. (unchanged from current code)
           LATEST_TAG="$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+
           if [[ -z "$LATEST_TAG" ]]; then
-            NEW_TAG="v0.0.1"
+            case "$BUMP" in
+              major) NEW_TAG="v1.0.0" ;;
+              minor) NEW_TAG="v0.1.0" ;;
+              *)     NEW_TAG="v0.0.1" ;;
+            esac
           else
             VERSION="${LATEST_TAG#v}"
             IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-            NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            case "$BUMP" in
+              major) NEW_TAG="v$((MAJOR + 1)).0.0" ;;
+              minor) NEW_TAG="v${MAJOR}.$((MINOR + 1)).0" ;;
+              *)     NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+            esac
           fi
-          echo "Latest tag: ${LATEST_TAG:-<none>}; new tag: $NEW_TAG"
+
+          # Fail closed: NEW_TAG must always be a strict vMAJOR.MINOR.PATCH string before we
+          # let it anywhere near `git tag`/`git push`/`gh release create`. The case/arithmetic
+          # construction above already guarantees this — this is a tested invariant, not a
+          # speculative check, so a future edit that lets commit-derived text leak into
+          # NEW_TAG fails loudly here instead of silently tagging something malformed.
+          if ! [[ "$NEW_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Computed NEW_TAG '$NEW_TAG' is not a valid vMAJOR.MINOR.PATCH string — refusing to tag."
+            exit 1
+          fi
+
+          echo "Latest tag: ${LATEST_TAG:-<none>}; bump: $BUMP; new tag: $NEW_TAG"
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Tag and release
