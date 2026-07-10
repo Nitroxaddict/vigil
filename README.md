@@ -82,8 +82,11 @@ This applies to **every** env var and label, including ones not enumerated in th
 | `VIGIL_NOTIFICATION_TEMPLATE` | `WATCHTOWER_NOTIFICATION_TEMPLATE` | Custom Go template for the notification body |
 | `VIGIL_NOTIFICATION_URL` | `WATCHTOWER_NOTIFICATION_URL` | Shoutrrr notification URL(s) |
 | `VIGIL_NOTIFICATION_TITLE_TAG` | `WATCHTOWER_NOTIFICATION_TITLE_TAG` | Prefix added to notification subject/title |
+| `VIGIL_NOTIFICATION_EMAIL_PLAINTEXT` | `WATCHTOWER_NOTIFICATION_EMAIL_PLAINTEXT` | Send plain-text email (`email-text`) instead of the default HTML template (`email-html`) |
 
 Email-, Slack-, MS Teams- and Gotify-specific options (SMTP server, hook URLs, tokens, etc.) follow the same pattern: every `WATCHTOWER_NOTIFICATION_*` variable accepts a `VIGIL_NOTIFICATION_*` equivalent. Run `vigil --help` for the complete flag list.
+
+When `email` is the only notifier configured (no other `--notification-url` entries), Vigil automatically renders it with the `email-html` template — a formatted summary with failures, updates, and pending changes in separate sections — instead of the generic log-dump `default` template. Set `VIGIL_NOTIFICATION_EMAIL_PLAINTEXT=true` to get the equivalent plain-text layout instead. Pass an explicit `--notification-template` to opt out of the auto-default entirely.
 
 ### Container Labels
 
